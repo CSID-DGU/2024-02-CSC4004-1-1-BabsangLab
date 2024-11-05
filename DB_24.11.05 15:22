@@ -1,0 +1,65 @@
+-- 유저 정보 테이블
+CREATE TABLE UserInfo (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    allergy_info TEXT
+);
+
+-- 식단 기록 테이블
+CREATE TABLE MealRecord (
+    record_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    date DATE NOT NULL,
+    meal_time ENUM('아침', '점심', '저녁', '간식') NOT NULL,
+    food_type VARCHAR(100),
+    intake_amount DECIMAL(5, 2),  -- 섭취량
+    calories INT,
+    protein DECIMAL(5, 2),  -- 단백질
+    fat DECIMAL(5, 2),      -- 지방
+    carbohydrates DECIMAL(5, 2), -- 탄수화물
+    FOREIGN KEY (user_id) REFERENCES UserInfo(user_id)
+);
+
+-- 음식 데이터 테이블
+CREATE TABLE FoodData (
+    food_id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL,
+    calories INT NOT NULL,
+    protein DECIMAL(5, 2),   -- 단백질
+    fat DECIMAL(5, 2),       -- 지방
+    carbohydrates DECIMAL(5, 2), -- 탄수화물
+    allergy_info TEXT       -- 알레르기 성분
+);
+
+-- 추천 데이터 테이블
+CREATE TABLE Recommendation (
+    recommendation_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    recommendation_datetime DATETIME NOT NULL,
+    recommended_foods TEXT,  -- 추천 음식 목록
+    recommendation_reason TEXT, -- 추천 이유 (알레르기 회피, 부족 영양소 섭취 등)
+    FOREIGN KEY (user_id) REFERENCES UserInfo(user_id)
+);
+
+-- 알레르기 정보 테이블
+CREATE TABLE AllergyInfo (
+    allergy_id INT PRIMARY KEY AUTO_INCREMENT,
+    allergy_name VARCHAR(100) NOT NULL,
+    description TEXT
+);
+
+-- 음식-알레르기 연관 테이블
+CREATE TABLE FoodAllergy (
+    food_id INT,
+    allergy_id INT,
+    FOREIGN KEY (food_id) REFERENCES FoodData(food_id),
+    FOREIGN KEY (allergy_id) REFERENCES AllergyInfo(allergy_id),
+    PRIMARY KEY (food_id, allergy_id)
+);
+
+-- show tables;
+-- show databases;
+-- use DB_2020112169;
+-- show tables;
+
+-- drop table if exists AllergyInfo,FoodAllergy,FoodData,MealRecord,Recommendation,UserInfo;
