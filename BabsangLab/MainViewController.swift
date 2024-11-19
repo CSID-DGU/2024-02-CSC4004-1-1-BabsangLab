@@ -72,6 +72,12 @@ class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        
+        let tapGesture2 = UITapGestureRecognizer(target: self, action: #selector(openSignupPage))
+           signupLabel.isUserInteractionEnabled = true
+           signupLabel.addGestureRecognizer(tapGesture2)
+        
+        
         overrideUserInterfaceStyle = .light
 
         view.backgroundColor = UIColor(white: 1.0, alpha: 1.0)
@@ -93,6 +99,11 @@ class MainViewController: UIViewController {
         view.endEditing(true)
     }
 
+    
+    @objc func openSignupPage() {
+        let signupVC = SignupViewController()
+        navigationController?.pushViewController(signupVC, animated: true)
+    }
     
     func setupConstraints() {
         NSLayoutConstraint.activate([
