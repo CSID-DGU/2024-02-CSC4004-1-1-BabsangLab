@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import com.example.Open.Software.Back.enums.Meal_time;
+import com.example.Open.Software.Back.domain.enums.Meal_time;
 
 @Entity
 @Table(name="MealRecord")

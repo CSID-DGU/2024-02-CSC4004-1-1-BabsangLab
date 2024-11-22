@@ -1,10 +1,11 @@
 package com.example.Open.Software.Back.domain;
 
+import com.example.Open.Software.Back.domain.enums.Allergy;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
-import com.example.Open.Software.Back.enums.Gender;
-import com.example.Open.Software.Back.enums.Weight_goal;
+import com.example.Open.Software.Back.domain.enums.Gender;
+import com.example.Open.Software.Back.domain.enums.Weight_goal;
 
 @Table(name = "UserInfo")
 @Entity
@@ -40,15 +41,15 @@ public class User {
     private String med_history;
 
     @Column
-    @Enumerated(EnumType.ORDINAL)
-    private Integer allergy_info;
+    @Enumerated(EnumType.STRING)
+    private Allergy allergy;
 
     @Column
     @Enumerated(EnumType.STRING)
     private Weight_goal weight_goal;
 
     @Builder
-    public User(String user_id, String name, String password, Integer age, Gender gender, Double height, Double weight, String med_history, Integer allergy_info, Weight_goal weight_goal) {
+    public User(String user_id, String name, String password, Integer age, Gender gender, Double height, Double weight, String med_history, Allergy allergy, Weight_goal weight_goal) {
         this.user_id = user_id;
         this.name = name;
         this.password = password;
@@ -57,7 +58,7 @@ public class User {
         this.height = height;
         this.weight = weight;
         this.med_history = med_history;
-        this.allergy_info = allergy_info;
+        this.allergy = allergy;
         this.weight_goal = weight_goal;
     }
 }
