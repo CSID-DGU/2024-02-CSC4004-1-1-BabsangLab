@@ -9,7 +9,8 @@ class MainTabBarController: UITabBarController {
 
     func setupTabBar() {
         let todayDietVC = MainViewController()
-        todayDietVC.tabBarItem = UITabBarItem(title: "오늘 식단", image: UIImage(systemName: "house"), tag: 0)
+        let todayDietNavVC = UINavigationController(rootViewController: todayDietVC) // UINavigationController로 감싸기
+        todayDietNavVC.tabBarItem = UITabBarItem(title: "오늘 식단", image: UIImage(systemName: "house"), tag: 0)
 
         let dietRecordVC = UIViewController()
         dietRecordVC.view.backgroundColor = .white
@@ -19,9 +20,10 @@ class MainTabBarController: UITabBarController {
         profileVC.view.backgroundColor = .white
         profileVC.tabBarItem = UITabBarItem(title: "프로필", image: UIImage(systemName: "person"), tag: 2)
 
-        viewControllers = [dietRecordVC, todayDietVC, profileVC]
+        viewControllers = [todayDietNavVC, dietRecordVC, profileVC]
         selectedIndex = 0 // "오늘 식단" 화면을 기본 선택
     }
+
 }
 
 
