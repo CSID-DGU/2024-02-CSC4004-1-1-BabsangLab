@@ -190,7 +190,11 @@ class UserInfoViewController: UIViewController {
     }
 
     @objc func startButtonTapped() {
-        print("회원가입 완료!")
+        
+        let mainTabBarController = MainTabBarController()
+               mainTabBarController.modalPresentationStyle = .fullScreen
+               present(mainTabBarController, animated: true, completion: nil)
+        
     }
 
     @objc func validateForm() {

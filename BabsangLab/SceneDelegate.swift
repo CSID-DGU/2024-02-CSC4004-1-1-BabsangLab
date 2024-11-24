@@ -9,13 +9,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
         let window = UIWindow(windowScene: windowScene)
-        let mainVC = MainViewController()
-        let navigationController = UINavigationController(rootViewController: mainVC)
+        let loginVC = LoginViewController() // Login 화면을 첫 화면으로 설정
+        let navigationController = UINavigationController(rootViewController: loginVC)
         window.rootViewController = navigationController
         window.makeKeyAndVisible()
-        window.overrideUserInterfaceStyle = .light 
+        window.overrideUserInterfaceStyle = .light
         self.window = window
     }
+    
+    
 
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.
