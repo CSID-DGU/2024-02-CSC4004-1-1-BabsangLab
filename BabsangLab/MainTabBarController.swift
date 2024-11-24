@@ -8,21 +8,27 @@ class MainTabBarController: UITabBarController {
     }
 
     func setupTabBar() {
+        // 오늘 식단 탭
         let todayDietVC = MainViewController()
-        let todayDietNavVC = UINavigationController(rootViewController: todayDietVC) // UINavigationController로 감싸기
+        let todayDietNavVC = UINavigationController(rootViewController: todayDietVC)
         todayDietNavVC.tabBarItem = UITabBarItem(title: "오늘 식단", image: UIImage(systemName: "house"), tag: 0)
 
-        let dietRecordVC = UIViewController()
-        dietRecordVC.view.backgroundColor = .white
-        dietRecordVC.tabBarItem = UITabBarItem(title: "식단 기록", image: UIImage(systemName: "list.bullet"), tag: 1)
+        // 식단 기록 탭
+        let dietRecordVC = CalendarViewController() // CalendarViewController 사용
+        let dietRecordNavVC = UINavigationController(rootViewController: dietRecordVC)
+        dietRecordNavVC.tabBarItem = UITabBarItem(title: "식단 기록", image: UIImage(systemName: "list.bullet"), tag: 1)
 
-        let profileVC = UIViewController()
-        profileVC.view.backgroundColor = .white
-        profileVC.tabBarItem = UITabBarItem(title: "프로필", image: UIImage(systemName: "person"), tag: 2)
+        // 프로필 탭
+        let profileVC = ProfileViewController() // ProfileViewController 사용
+        let profileNavVC = UINavigationController(rootViewController: profileVC)
+        profileNavVC.tabBarItem = UITabBarItem(title: "프로필", image: UIImage(systemName: "person"), tag: 2)
 
-        viewControllers = [todayDietNavVC, dietRecordVC, profileVC]
+        // 탭 바에 뷰 컨트롤러 설정
+        viewControllers = [todayDietNavVC, dietRecordNavVC, profileNavVC]
         selectedIndex = 0 // "오늘 식단" 화면을 기본 선택
     }
+
+
 
 }
 

@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D66389D62CF39F21006C06E5 /* FSCalendar in Frameworks */ = {isa = PBXBuildFile; productRef = D66389D52CF39F21006C06E5 /* FSCalendar */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D6CACC7B2CEBB75500328F97 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -55,6 +59,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D66389D62CF39F21006C06E5 /* FSCalendar in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -113,6 +118,7 @@
 			);
 			name = BabsangLab;
 			packageProductDependencies = (
+				D66389D52CF39F21006C06E5 /* FSCalendar */,
 			);
 			productName = BabsangLab;
 			productReference = D6CACC642CEBB75500328F97 /* BabsangLab.app */;
@@ -190,6 +196,9 @@
 			);
 			mainGroup = D6CACC5B2CEBB75500328F97;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D66389B02CF39F00006C06E5 /* XCRemoteSwiftPackageReference "FSCalendar" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D6CACC652CEBB75500328F97 /* Products */;
 			projectDirPath = "";
@@ -553,6 +562,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D66389B02CF39F00006C06E5 /* XCRemoteSwiftPackageReference "FSCalendar" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/WenchaoD/FSCalendar.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D66389D52CF39F21006C06E5 /* FSCalendar */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D66389B02CF39F00006C06E5 /* XCRemoteSwiftPackageReference "FSCalendar" */;
+			productName = FSCalendar;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D6CACC5C2CEBB75500328F97 /* Project object */;
 }

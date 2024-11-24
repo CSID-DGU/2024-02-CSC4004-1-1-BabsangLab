@@ -32,7 +32,7 @@ class MainViewController: UIViewController {
         navigationBarView.layer.shadowRadius = 4
 
         let titleLabel = UILabel()
-        titleLabel.text = "오늘 식단"
+        titleLabel.text = "오늘의 식단"
         titleLabel.font = UIFont.boldSystemFont(ofSize: 18)
         titleLabel.textColor = .black
         titleLabel.textAlignment = .center

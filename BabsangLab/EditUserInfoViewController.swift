@@ -1,6 +1,6 @@
 import UIKit
 
-class UserInfoViewController: UIViewController {
+class EditUserInfoViewController: UIViewController {
     let scrollView = UIScrollView()
     let contentView = UIStackView()
     let titleLabel = UILabel()
@@ -121,7 +121,7 @@ class UserInfoViewController: UIViewController {
     }
 
     func setupStartButton() {
-        startButton.setTitle("시작하기", for: .normal)
+        startButton.setTitle("수정하기", for: .normal)
         startButton.heightAnchor.constraint(equalToConstant: 44).isActive = true
         startButton.backgroundColor = UIColor.lightGray
         startButton.setTitleColor(UIColor.white, for: .normal)
@@ -246,4 +246,5 @@ class UserInfoViewController: UIViewController {
 #Preview {
     UserInfoViewController()
 }
+
 
