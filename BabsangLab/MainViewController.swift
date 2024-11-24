@@ -21,46 +21,42 @@ class MainViewController: UIViewController {
         setupFloatingButtons()
         updateCalorieProgress()
     }
-    
+
     func setupCustomNavigationBar() {
-            let navigationBarView = UIView()
-            navigationBarView.translatesAutoresizingMaskIntoConstraints = false
-            navigationBarView.backgroundColor = .white
-            navigationBarView.layer.shadowColor = UIColor.black.cgColor
-            navigationBarView.layer.shadowOpacity = 0.1
-            navigationBarView.layer.shadowOffset = CGSize(width: 0, height: 2)
-            navigationBarView.layer.shadowRadius = 4
+        let navigationBarView = UIView()
+        navigationBarView.translatesAutoresizingMaskIntoConstraints = false
+        navigationBarView.backgroundColor = .white
+        navigationBarView.layer.shadowColor = UIColor.black.cgColor
+        navigationBarView.layer.shadowOpacity = 0.1
+        navigationBarView.layer.shadowOffset = CGSize(width: 0, height: 2)
+        navigationBarView.layer.shadowRadius = 4
 
-            let titleLabel = UILabel()
-            titleLabel.text = "오늘 식단"
-            titleLabel.font = UIFont.boldSystemFont(ofSize: 18)
-            titleLabel.textColor = .black
-            titleLabel.textAlignment = .center
-            titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        let titleLabel = UILabel()
+        titleLabel.text = "오늘 식단"
+        titleLabel.font = UIFont.boldSystemFont(ofSize: 18)
+        titleLabel.textColor = .black
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
 
-            navigationBarView.addSubview(titleLabel)
-            view.addSubview(navigationBarView)
+        navigationBarView.addSubview(titleLabel)
+        view.addSubview(navigationBarView)
 
-            NSLayoutConstraint.activate([
-                navigationBarView.topAnchor.constraint(equalTo: view.topAnchor, constant: 30),
-                navigationBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                navigationBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                navigationBarView.heightAnchor.constraint(equalToConstant: 60),
+        NSLayoutConstraint.activate([
+            navigationBarView.topAnchor.constraint(equalTo: view.topAnchor, constant: 30),
+            navigationBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            navigationBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            navigationBarView.heightAnchor.constraint(equalToConstant: 60),
 
-                titleLabel.centerXAnchor.constraint(equalTo: navigationBarView.centerXAnchor),
-                titleLabel.bottomAnchor.constraint(equalTo: navigationBarView.bottomAnchor, constant: -10)
-            ])
-        }
-
-   
-    
+            titleLabel.centerXAnchor.constraint(equalTo: navigationBarView.centerXAnchor),
+            titleLabel.bottomAnchor.constraint(equalTo: navigationBarView.bottomAnchor, constant: -10)
+        ])
+    }
 
     func setupNutritionView() {
         nutritionView.translatesAutoresizingMaskIntoConstraints = false
         nutritionView.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
         nutritionView.layer.cornerRadius = 10
 
-        // Progress Circle
         let progressView = UIView()
         progressView.translatesAutoresizingMaskIntoConstraints = false
 
@@ -75,15 +71,14 @@ class MainViewController: UIViewController {
         progressCircle.strokeColor = UIColor.green.cgColor
         progressCircle.fillColor = UIColor.clear.cgColor
         progressCircle.lineWidth = 10
-        progressCircle.strokeEnd = 0.0 // 초기값
+        progressCircle.strokeEnd = consumedCalories / totalCalories
         progressView.layer.addSublayer(progressCircle)
 
-        // 중앙 칼로리 Label
         let centerLabel = UILabel()
         centerLabel.text = "\(Int(consumedCalories))\n/\(Int(totalCalories)) kcal"
         centerLabel.numberOfLines = 2
         centerLabel.textAlignment = .center
-        centerLabel.font = UIFont.boldSystemFont(ofSize: 10)
+        centerLabel.font = UIFont.boldSystemFont(ofSize: 12)
         centerLabel.translatesAutoresizingMaskIntoConstraints = false
         progressView.addSubview(centerLabel)
 
@@ -92,7 +87,6 @@ class MainViewController: UIViewController {
             centerLabel.centerYAnchor.constraint(equalTo: progressView.centerYAnchor)
         ])
 
-        // Nutrition Stack
         let nutritionStack = UIStackView()
         nutritionStack.axis = .horizontal
         nutritionStack.distribution = .fillEqually
@@ -106,7 +100,6 @@ class MainViewController: UIViewController {
             let stack = UIStackView()
             stack.axis = .vertical
             stack.alignment = .center
-            stack.spacing = 0
 
             let titleLabel = UILabel()
             titleLabel.text = label
@@ -115,7 +108,7 @@ class MainViewController: UIViewController {
 
             let valueLabel = UILabel()
             valueLabel.text = nutritionValues[index]
-            valueLabel.font = UIFont.boldSystemFont(ofSize: 10)
+            valueLabel.font = UIFont.boldSystemFont(ofSize: 12)
             valueLabel.textAlignment = .center
 
             stack.addArrangedSubview(titleLabel)
@@ -206,13 +199,6 @@ class MainViewController: UIViewController {
         floatingPlusButton.layer.cornerRadius = 30
         floatingPlusButton.translatesAutoresizingMaskIntoConstraints = false
 
-        floatingPlusButton.titleLabel?.translatesAutoresizingMaskIntoConstraints = false
-
-        NSLayoutConstraint.activate([
-            floatingPlusButton.titleLabel!.leadingAnchor.constraint(equalTo: floatingPlusButton.leadingAnchor, constant: 19.5),
-            floatingPlusButton.titleLabel!.topAnchor.constraint(equalTo: floatingPlusButton.topAnchor, constant: -3),
-        ])
-
         floatingPlusButton.addTarget(self, action: #selector(showAddOptions), for: .touchUpInside)
         view.addSubview(floatingPlusButton)
 
@@ -224,21 +210,91 @@ class MainViewController: UIViewController {
         ])
     }
 
-
-    func updateCalorieProgress() {
-        let progress = consumedCalories / totalCalories
-        progressCircle.strokeEnd = progress // 섭취 비율에 따른 업데이트
-        progressCircle.strokeColor = UIColor.green.cgColor
-    }
-
     @objc func showAddOptions() {
         let alertController = UIAlertController(title: "음식 추가하기", message: nil, preferredStyle: .actionSheet)
-        alertController.addAction(UIAlertAction(title: "사진으로 추가하기", style: .default))
-        alertController.addAction(UIAlertAction(title: "앨범으로 추가하기", style: .default))
-        alertController.addAction(UIAlertAction(title: "검색으로 추가하기", style: .default))
+        alertController.addAction(UIAlertAction(title: "사진으로 추가하기", style: .default) { _ in
+            self.showFoodOptionSelector() // 기존의 카메라 호출 로직
+        })
+        alertController.addAction(UIAlertAction(title: "앨범으로 추가하기", style: .default) { _ in
+            self.openPhotoLibrary() // 새로 추가된 앨범 호출 로직
+        })
+        alertController.addAction(UIAlertAction(title: "검색으로 추가하기", style: .default) { _ in
+            self.navigateToSearch() // 새로 추가된 검색 화면 이동
+        })
         alertController.addAction(UIAlertAction(title: "취소", style: .cancel))
 
         present(alertController, animated: true)
+    }
+
+    // 검색으로 추가하기 화면으로 이동하는 메서드
+    func navigateToSearch() {
+        let searchVC = SearchViewController()
+        searchVC.modalPresentationStyle = .fullScreen
+        navigationController?.pushViewController(searchVC, animated: true)
+    }
+
+
+
+    func showFoodOptionSelector() {
+        let alertController = UIAlertController(title: "음식 종류 선택", message: "단일 음식과 다중 음식 중 선택하세요.", preferredStyle: .alert)
+
+        alertController.addAction(UIAlertAction(title: "단일 음식", style: .default) { _ in
+            self.navigateToCamera(foodType: .singleFood)
+        })
+
+        alertController.addAction(UIAlertAction(title: "다중 음식", style: .default) { _ in
+            self.navigateToCamera(foodType: .multiFood)
+        })
+
+        alertController.addAction(UIAlertAction(title: "취소", style: .cancel))
+
+        present(alertController, animated: true)
+    }
+    
+    func navigateToCamera(foodType: FoodType) {
+        guard let navigationController = self.navigationController else {
+            print("NavigationController가 nil입니다.")
+            return
+        }
+        let cameraVC = CameraViewController()
+        cameraVC.selectedFoodType = foodType
+        navigationController.pushViewController(cameraVC, animated: true)
+    }
+    
+    func showFoodOptionSelectorForAlbum(image: UIImage) {
+        let alertController = UIAlertController(title: "음식 종류 선택", message: "단일 음식과 다중 음식 중 선택하세요.", preferredStyle: .alert)
+
+        alertController.addAction(UIAlertAction(title: "단일 음식", style: .default) { _ in
+            self.navigateToResultViewController(image: image, foodType: .singleFood)
+        })
+
+        alertController.addAction(UIAlertAction(title: "다중 음식", style: .default) { _ in
+            self.navigateToResultViewController(image: image, foodType: .multiFood)
+        })
+
+        alertController.addAction(UIAlertAction(title: "취소", style: .cancel))
+
+        present(alertController, animated: true)
+    }
+
+    func navigateToResultViewController(image: UIImage, foodType: FoodType) {
+        let resultVC = ResultViewController()
+        resultVC.selectedImage = image
+        resultVC.selectedFoodType = foodType
+        navigationController?.pushViewController(resultVC, animated: true)
+    }
+    
+    
+    func openCamera() {
+        let cameraVC = UIImagePickerController()
+        cameraVC.sourceType = .camera
+        cameraVC.delegate = self
+        present(cameraVC, animated: true)
+    }
+
+    func updateCalorieProgress() {
+        let progress = consumedCalories / totalCalories
+        progressCircle.strokeEnd = progress
     }
 }
 
@@ -249,10 +305,41 @@ extension MainViewController: UICollectionViewDataSource, UICollectionViewDelega
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "RecordCell", for: indexPath) as! RecordCell
-        cell.configure(name: "음식 \(indexPath.row)", mealTime: "아침", calories: "test kcal")
+        cell.configure(name: "음식 \(indexPath.row)", mealTime: "아침", calories: "\(100 + indexPath.row * 50) kcal")
         return cell
     }
 }
+
+extension MainViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    
+    func openPhotoLibrary() {
+            guard UIImagePickerController.isSourceTypeAvailable(.photoLibrary) else {
+                print("앨범을 사용할 수 없습니다.")
+                return
+            }
+
+            let picker = UIImagePickerController()
+            picker.sourceType = .photoLibrary
+            picker.delegate = self
+            picker.allowsEditing = false
+            present(picker, animated: true)
+        }
+    
+    // 이미지를 선택했을 때 호출되는 델리게이트 메서드
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+            picker.dismiss(animated: true) {
+                if let image = info[.originalImage] as? UIImage {
+                    self.showFoodOptionSelectorForAlbum(image: image)
+                }
+            }
+        }
+
+        // 이미지 선택을 취소했을 때 호출되는 델리게이트 메서드
+        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+            picker.dismiss(animated: true, completion: nil)
+        }
+}
+
 
 class RecordCell: UICollectionViewCell {
     private let nameLabel = UILabel()
@@ -297,6 +384,12 @@ class RecordCell: UICollectionViewCell {
         calorieLabel.text = calories
     }
 }
+
+enum FoodType: String {
+    case singleFood = "단일 음식"
+    case multiFood = "다중 음식"
+}
+
 
 #Preview {
     MainViewController()
