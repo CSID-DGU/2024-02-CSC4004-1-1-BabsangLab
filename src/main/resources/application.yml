@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: babsanglab
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/babsanglab
+    username: root
+    password: 1234
+
+  jpa:
+    hibernate:
+      ddl-auto: update
