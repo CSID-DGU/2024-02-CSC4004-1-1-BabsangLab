@@ -1,12 +1,11 @@
 package com.opensoftware.babsanglab.controller;
 
-import com.opensoftware.babsanglab.dto.RegisterRequestDto;
+import com.opensoftware.babsanglab.dto.request.RegisterRequestDto;
+import com.opensoftware.babsanglab.dto.response.RegisterResponseDto;
+import com.opensoftware.babsanglab.dto.response.ResponseDto;
 import com.opensoftware.babsanglab.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/user")
@@ -14,9 +13,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
     private final UserService userService;
     @PostMapping("/register")
-    public Boolean register(
+    public ResponseDto<RegisterResponseDto> register(
             @RequestBody  RegisterRequestDto registerRequestDto
             ) {
-        return userService.register(registerRequestDto);
+        return new ResponseDto<>(userService.register(registerRequestDto));
     }
+
+    @GetMapping("")
+    public ResponseDto<Boolean> test() {
+        return new ResponseDto<>(true);
+    }
+
 }

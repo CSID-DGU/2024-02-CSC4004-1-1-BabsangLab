@@ -5,12 +5,13 @@ import com.opensoftware.babsanglab.domain.enums.Allergy;
 import com.opensoftware.babsanglab.domain.enums.Mealtime;
 import jakarta.persistence.*;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
+@Getter
 @NoArgsConstructor
 public class Record {
     @Id

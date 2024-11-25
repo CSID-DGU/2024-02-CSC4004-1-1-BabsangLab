@@ -1,9 +1,13 @@
-package com.example.Open.Software.Back.dto;
+package com.opensoftware.babsanglab.dto.exception;
 
-import com.example.Open.Software.Back.exception.ErrorDefine;
+import com.opensoftware.babsanglab.exception.ErrorDefine;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+@Getter
+@Builder
 @AllArgsConstructor
 public class ExceptionDto {
     private final String code;
@@ -14,8 +18,8 @@ public class ExceptionDto {
         this.message = errorDefine.getMessage();
     }
 
-    public ExceptionDto(Exception exception) {
+    public ExceptionDto(Exception e) {
         this.code = Integer.toString(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        this.message = exception.getMessage();
+        this.message = e.getMessage();
     }
 }

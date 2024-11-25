@@ -1,4 +1,4 @@
-package com.opensoftware.babsanglab.dto;
+package com.opensoftware.babsanglab.dto.request;
 
 import com.opensoftware.babsanglab.domain.enums.Mealtime;
 import lombok.Getter;

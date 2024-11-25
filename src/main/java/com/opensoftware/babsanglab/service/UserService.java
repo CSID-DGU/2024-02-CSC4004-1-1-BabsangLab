@@ -1,7 +1,10 @@
 package com.opensoftware.babsanglab.service;
 
 import com.opensoftware.babsanglab.domain.User;
-import com.opensoftware.babsanglab.dto.RegisterRequestDto;
+import com.opensoftware.babsanglab.dto.request.RegisterRequestDto;
+import com.opensoftware.babsanglab.dto.response.RegisterResponseDto;
+import com.opensoftware.babsanglab.exception.ApiException;
+import com.opensoftware.babsanglab.exception.ErrorDefine;
 import com.opensoftware.babsanglab.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,9 +14,12 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private final UserRepository userRepository;
 
-    public Boolean register(RegisterRequestDto registerRequestDto){
+    public RegisterResponseDto register(RegisterRequestDto registerRequestDto){
+//        User user = userRepository.findById(10l)
+//                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+
         if (userRepository.findByUserId(registerRequestDto.getUserId()).isPresent())
-            return false;
+            throw new ApiException(ErrorDefine.USER_EXIST);
         User user = User.builder()
                 .userId(registerRequestDto.getUserId())
                 .password(registerRequestDto.getPassword())
@@ -27,6 +33,13 @@ public class UserService {
                 .weight_goal(registerRequestDto.getWeight_goal())
                 .build();
             userRepository.save(user);
-            return true;
+
+//             RegisterResponseDto registerResponseDto = RegisterResponseDto.builder()
+//                    .message("회원가입이 잘 되었습니다")
+//                    .build();
+
+        return RegisterResponseDto.builder()
+                    .message("회원가입이 잘 되었습니다")
+                    .build();
     }
 }

@@ -1,4 +1,4 @@
-package com.example.Open.Software.Back.exception;
+package com.opensoftware.babsanglab.exception;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
-package com.example.Open.Software.Back.dto;
+package com.opensoftware.babsanglab.dto.request;
 
-import com.example.Open.Software.Back.domain.enums.Allergy;
-import com.example.Open.Software.Back.domain.enums.Gender;
-import com.example.Open.Software.Back.domain.enums.Weight_goal;
+import com.opensoftware.babsanglab.domain.enums.Allergy;
+import com.opensoftware.babsanglab.domain.enums.Gender;
+import com.opensoftware.babsanglab.domain.enums.Weight_goal;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,9 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RegisterRequestDto {
-    private String user_id;
-    private String name;
+    private String userId;
     private String password;
+    private String name;
     private Integer age;
     private Gender gender;
     private Double height;
