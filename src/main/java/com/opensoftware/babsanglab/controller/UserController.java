@@ -1,6 +1,7 @@
 package com.opensoftware.babsanglab.controller;
 
 import com.opensoftware.babsanglab.dto.request.RegisterRequestDto;
+import com.opensoftware.babsanglab.dto.request.UpdateRequestDto;
 import com.opensoftware.babsanglab.dto.response.RegisterResponseDto;
 import com.opensoftware.babsanglab.dto.response.ResponseDto;
 import com.opensoftware.babsanglab.service.UserService;
@@ -18,6 +19,14 @@ public class UserController {
             ) {
         return new ResponseDto<>(userService.register(registerRequestDto));
     }
+
+    @PutMapping("/update")
+    public ResponseDto<Boolean> updateUser(
+            @RequestBody UpdateRequestDto updateRequestDto
+    ) {
+        return new ResponseDto<>(userService.updateUser(updateRequestDto));
+    }
+
 
     @GetMapping("")
     public ResponseDto<Boolean> test() {

@@ -6,10 +6,13 @@ import com.opensoftware.babsanglab.domain.enums.Weight_goal;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table
 @NoArgsConstructor
+@Setter
+
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
