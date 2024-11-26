@@ -1,4 +1,4 @@
 package com.opensoftware.babsanglab.dto.request;
 
-public class RecordDayDto {
+public class RecordDayRequestDto {
 }
