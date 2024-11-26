@@ -1,21 +1,16 @@
 package com.opensoftware.babsanglab.dto.request;
 
-
 import com.opensoftware.babsanglab.domain.enums.Gender;
 import com.opensoftware.babsanglab.domain.enums.Weight_goal;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
 @Getter
-@AllArgsConstructor
-@NoArgsConstructor
-public class RegisterRequestDto {
-    private String userId;
+
+public class UpdateRequestDto {
+    private String user_id; // 수정하려는 사용자 식별자
     private String password;
-    private String name;
     private Integer age;
     private Gender gender;
     private Double height;
