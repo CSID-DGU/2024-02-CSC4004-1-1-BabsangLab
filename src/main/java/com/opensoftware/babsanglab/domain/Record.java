@@ -1,7 +1,6 @@
 package com.opensoftware.babsanglab.domain;
 
 
-import com.opensoftware.babsanglab.domain.enums.Allergy;
 import com.opensoftware.babsanglab.domain.enums.Mealtime;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -9,6 +8,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -47,13 +48,14 @@ public class Record {
     @Column
     private Double intake_amount;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private Allergy allergy;
+    @ElementCollection
+    @CollectionTable(name = "user_allergies", joinColumns = @JoinColumn(name = "user_id"))
+    @Column(name = "allergy")
+    private Set<String> allergy = new HashSet<>();
 
     @Builder
     public Record(User user, LocalDate date, Mealtime mealtime, String foodName, Double calories, Double protein
-    ,Double fat, Double carbs, Allergy allergy){
+    ,Double fat, Double carbs, Set<String> allergy){
         this.user = user;
         this.date = date;
         this.mealtime = mealtime;

@@ -8,6 +8,9 @@ import com.opensoftware.babsanglab.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
+import java.util.List;
+
 @RestController
 @RequestMapping("/user")
 @RequiredArgsConstructor
@@ -25,6 +28,14 @@ public class UserController {
             @RequestBody UpdateRequestDto updateRequestDto
     ) {
         return new ResponseDto<>(userService.updateUser(updateRequestDto));
+    }
+
+    @PutMapping("/{userId}/allergies")
+    public ResponseDto<Boolean> updateAllergies(
+            @PathVariable Long userId,
+            @RequestBody List<String> allergies) {
+        userService.updateUserAllergies(userId, new HashSet<>(allergies));
+        return new ResponseDto<>(true);
     }
 
 
