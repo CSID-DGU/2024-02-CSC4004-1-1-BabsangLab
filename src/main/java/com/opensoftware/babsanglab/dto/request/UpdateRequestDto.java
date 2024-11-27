@@ -9,7 +9,7 @@ import java.util.Set;
 @Getter
 
 public class UpdateRequestDto {
-    private String userId; // 수정하려는 사용자 식별자
+    private String user_id; // 수정하려는 사용자 식별자
     private String password;
     private Integer age;
     private Gender gender;

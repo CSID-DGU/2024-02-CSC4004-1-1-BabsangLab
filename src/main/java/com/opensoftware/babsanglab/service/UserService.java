@@ -55,7 +55,7 @@ public class UserService {
     }
 
     public Boolean updateUser(UpdateRequestDto updateRequestDto) {
-        User user = userRepository.findByUserId(updateRequestDto.getUserId())
+        User user = userRepository.findByUserId(updateRequestDto.getUser_id())
                 .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
 
         // 업데이트 가능한 필드 수정
