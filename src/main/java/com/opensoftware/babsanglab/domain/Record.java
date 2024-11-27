@@ -53,13 +53,9 @@ public class Record {
     @Column(name = "allergy")
     private Set<String> allergy = new HashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="food_id")
-    private Food food;
-
     @Builder
     public Record(User user, LocalDate date, Mealtime mealtime, String foodName, Double calories, Double protein
-    ,Double fat, Double carbs, Set<String> allergy, Food food){
+    ,Double fat, Double carbs, Set<String> allergy){
         this.user = user;
         this.date = date;
         this.mealtime = mealtime;
@@ -69,6 +65,5 @@ public class Record {
         this.fat = fat;
         this.carbs = carbs;
         this.allergy = allergy;
-        this.food = food;
     }
 }
