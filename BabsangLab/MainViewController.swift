@@ -94,7 +94,7 @@ class MainViewController: UIViewController {
         nutritionStack.translatesAutoresizingMaskIntoConstraints = false
 
         let nutritionLabels = ["탄수화물", "단백질", "지방"]
-        let nutritionValues = ["120g / 300g", "20g / 60g", "20g / 50g"]
+        let nutritionValues = ["g / g", "g / g", "g / g"]
 
         for (index, label) in nutritionLabels.enumerated() {
             let stack = UIStackView()
@@ -166,12 +166,7 @@ class MainViewController: UIViewController {
         analysisView.layer.cornerRadius = 10
 
         let analysisLabel = UILabel()
-        analysisLabel.text = """
-        섭취 권장 영양소\n단백질\n
-        다음 식사 추천
-        추천 식재료: 닭가슴살
-        추천 메뉴: 닭가슴살 스테이크
-        """
+        analysisLabel.text = ""
         analysisLabel.font = UIFont.systemFont(ofSize: 14)
         analysisLabel.numberOfLines = 0
         analysisLabel.translatesAutoresizingMaskIntoConstraints = false
