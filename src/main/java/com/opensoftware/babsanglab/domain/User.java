@@ -1,5 +1,6 @@
 package com.opensoftware.babsanglab.domain;
 
+import com.opensoftware.babsanglab.domain.enums.Allergy;
 import com.opensoftware.babsanglab.domain.enums.Gender;
 import com.opensoftware.babsanglab.domain.enums.Weight_goal;
 import jakarta.persistence.*;
@@ -45,10 +46,13 @@ public class User {
     @Column
     private String med_history;
 
-    @ElementCollection
-    @CollectionTable(name = "user_allergies", joinColumns = @JoinColumn(name = "user_id"))
-    @Column(name = "allergy")
-    private Set<String> allergy = new HashSet<>();
+    @Column
+    @Enumerated(EnumType.STRING)
+    private Allergy allergy;
+//    @ElementCollection
+//    @CollectionTable(name = "user_allergies", joinColumns = @JoinColumn(name = "user_id"))
+//    @Column(name = "allergy")
+//    private Set<String> allergy = new HashSet<>();
 
 
     @Column
@@ -57,7 +61,7 @@ public class User {
 
     @Builder
     public User(String userId, String name, String password, Integer age,
-                Gender gender, Double height, Double weight, String med_history, Set<String> allergy, Weight_goal weight_goal) {
+                Gender gender, Double height, Double weight, String med_history, /*Set<String>*/Allergy allergy, Weight_goal weight_goal) {
         this.userId = userId;
         this.name = name;
         this.password = password;

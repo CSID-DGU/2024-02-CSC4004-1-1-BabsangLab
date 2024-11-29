@@ -30,13 +30,13 @@ public class UserController {
         return new ResponseDto<>(userService.updateUser(updateRequestDto));
     }
 
-    @PutMapping("/{userId}/allergies")
-    public ResponseDto<Boolean> updateAllergies(
-            @PathVariable Long userId,
-            @RequestBody List<String> allergies) {
-        userService.updateUserAllergies(userId, new HashSet<>(allergies));
-        return new ResponseDto<>(true);
-    }
+//    @PutMapping("/{userId}/allergies")
+//    public ResponseDto<Boolean> updateAllergies(
+//            @PathVariable Long userId,
+//            @RequestBody List<String> allergies) {
+//        userService.updateUserAllergies(userId, new HashSet<>(allergies));
+//        return new ResponseDto<>(true);
+//    }
 
 
     @GetMapping("")

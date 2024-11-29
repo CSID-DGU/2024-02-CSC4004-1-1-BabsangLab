@@ -1,5 +1,6 @@
 package com.opensoftware.babsanglab.dto.request;
 
+import com.opensoftware.babsanglab.domain.enums.Allergy;
 import com.opensoftware.babsanglab.domain.enums.Gender;
 import com.opensoftware.babsanglab.domain.enums.Weight_goal;
 import lombok.Getter;
@@ -16,6 +17,7 @@ public class UpdateRequestDto {
     private Double height;
     private Double weight;
     private String med_history;
-    private Set<String> allergy;
+    private Allergy allergy;
+    //private Set<String> allergy;
     private Weight_goal weight_goal;
 }

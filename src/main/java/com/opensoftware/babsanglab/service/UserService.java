@@ -19,12 +19,12 @@ import java.util.Set;
 @Transactional
 public class UserService {
     private final UserRepository userRepository;
-    public void updateUserAllergies(Long userId, Set<String> allergies) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
-        user.setAllergy(allergies);
-        userRepository.save(user);
-    }
+//    public void updateUserAllergies(Long userId, Set<String> allergies) {
+//        User user = userRepository.findById(userId)
+//                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+//        user.setAllergy(allergies);
+//        userRepository.save(user);
+//    }
     public RegisterResponseDto register(RegisterRequestDto registerRequestDto){
 //        User user = userRepository.findById(10l)
 //                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
@@ -40,7 +40,8 @@ public class UserService {
                 .height(registerRequestDto.getHeight())
                 .weight(registerRequestDto.getWeight())
                 .med_history(registerRequestDto.getMed_history())
-                .allergy(new HashSet<>(registerRequestDto.getAllergy())) // 다중 값 전달
+                .allergy(registerRequestDto.getAllergy())
+                //.allergy(new HashSet<>(registerRequestDto.getAllergy())) // 다중 값 전달
                 .weight_goal(registerRequestDto.getWeight_goal())
                 .build();
             userRepository.save(user);
@@ -65,7 +66,9 @@ public class UserService {
         if (updateRequestDto.getHeight() != null) user.setHeight(updateRequestDto.getHeight());
         if (updateRequestDto.getWeight() != null) user.setWeight(updateRequestDto.getWeight());
         if (updateRequestDto.getMed_history() != null) user.setMed_history(updateRequestDto.getMed_history());
-        if (updateRequestDto.getAllergy() != null) {user.setAllergy(new HashSet<>(updateRequestDto.getAllergy()));}        if (updateRequestDto.getWeight_goal() != null) user.setWeight_goal(updateRequestDto.getWeight_goal());
+        if (updateRequestDto.getAllergy() != null) user.setAllergy(updateRequestDto.getAllergy());
+//        if (updateRequestDto.getAllergy() != null) {user.setAllergy(new HashSet<>(updateRequestDto.getAllergy()));}
+        if (updateRequestDto.getWeight_goal() != null) user.setWeight_goal(updateRequestDto.getWeight_goal());
 
         userRepository.save(user); // 데이터베이스에 변경사항 저장
         return true;
