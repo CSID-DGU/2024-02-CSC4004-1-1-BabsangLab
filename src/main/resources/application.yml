@@ -7,9 +7,9 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:mysql://babsangdb.c7q6c2i0ozrp.ap-northeast-2.rds.amazonaws.com:3306/babsang_db
+    username: admin
+    password: babsang1234
 
   jpa:
     properties:
