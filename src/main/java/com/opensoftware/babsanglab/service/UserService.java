@@ -4,8 +4,6 @@ import com.opensoftware.babsanglab.domain.User;
 import com.opensoftware.babsanglab.dto.request.RegisterRequestDto;
 import com.opensoftware.babsanglab.dto.request.UpdateRequestDto;
 import com.opensoftware.babsanglab.dto.response.NotifyResponseDto;
-import com.opensoftware.babsanglab.dto.response.RegisterResponseDto;
-import com.opensoftware.babsanglab.dto.response.ResponseDto;
 import com.opensoftware.babsanglab.exception.ApiException;
 import com.opensoftware.babsanglab.exception.ErrorDefine;
 import com.opensoftware.babsanglab.repository.UserRepository;

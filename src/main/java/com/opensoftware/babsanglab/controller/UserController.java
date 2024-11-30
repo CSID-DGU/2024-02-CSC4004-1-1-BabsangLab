@@ -3,7 +3,6 @@ package com.opensoftware.babsanglab.controller;
 import com.opensoftware.babsanglab.dto.request.RegisterRequestDto;
 import com.opensoftware.babsanglab.dto.request.UpdateRequestDto;
 import com.opensoftware.babsanglab.dto.response.NotifyResponseDto;
-import com.opensoftware.babsanglab.dto.response.RegisterResponseDto;
 import com.opensoftware.babsanglab.dto.response.ResponseDto;
 import com.opensoftware.babsanglab.service.UserService;
 import lombok.RequiredArgsConstructor;
