@@ -39,8 +39,7 @@ public class Food {
 
 
     @Builder
-    public Food(Long id, String foodName, Double calories, Double protein, Double fat, Double carbs, Allergy allergy){
-        this.id = id;
+    public Food(String foodName, Double calories, Double protein, Double fat, Double carbs, Allergy allergy){
         this.foodName = foodName;
         this.calories = calories;
         this.protein = protein;
