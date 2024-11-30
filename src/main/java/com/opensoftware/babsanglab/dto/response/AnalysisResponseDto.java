@@ -14,4 +14,5 @@ public class AnalysisResponseDto {
     Double protein;
     Double carbs;
     Allergy allergy;
+    String medical_issue;
 }
