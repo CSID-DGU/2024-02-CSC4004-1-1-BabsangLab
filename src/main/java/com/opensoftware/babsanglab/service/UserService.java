@@ -1,26 +1,22 @@
 package com.opensoftware.babsanglab.service;
 
-import com.opensoftware.babsanglab.domain.Food;
 import com.opensoftware.babsanglab.domain.User;
 import com.opensoftware.babsanglab.dto.request.RegisterRequestDto;
 import com.opensoftware.babsanglab.dto.request.UpdateRequestDto;
-import com.opensoftware.babsanglab.dto.response.AnalysisResponseDto;
-import com.opensoftware.babsanglab.dto.response.GetPwResponseDto;
+import com.opensoftware.babsanglab.dto.response.NotifyResponseDto;
 import com.opensoftware.babsanglab.dto.response.RegisterResponseDto;
-import com.opensoftware.babsanglab.dto.response.ResponseDto;
 import com.opensoftware.babsanglab.exception.ApiException;
 import com.opensoftware.babsanglab.exception.ErrorDefine;
 import com.opensoftware.babsanglab.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
 @Transactional
+@Slf4j
 public class UserService {
     private final UserRepository userRepository;
 //    public void updateUserAllergies(Long userId, Set<String> allergies) {
@@ -70,13 +66,14 @@ public class UserService {
                 .build();
     }
 
-    public GetPwResponseDto getPw(String name){
+    public NotifyResponseDto getPw(String name){
+        log.info("Searching for user with name: {}", name);
             User user = userRepository.findByName(name)
                     .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
 
-        return new GetPwResponseDto(
-                user.getPassword()
-        );
+        return NotifyResponseDto.builder()
+                .message(user.getPassword())
+                .build();
     }
     public Boolean updateUser(UpdateRequestDto updateRequestDto) {
         User user = userRepository.findByUserId(updateRequestDto.getUserId())
