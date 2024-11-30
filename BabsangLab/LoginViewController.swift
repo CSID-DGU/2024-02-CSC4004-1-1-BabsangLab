@@ -5,7 +5,7 @@ class LoginViewController: UIViewController {
     // 로고 이미지 뷰
     let logoImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.image = UIImage(named: "Lunchbox") 
+        imageView.image = UIImage(named: "Lunchbox")
         imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
@@ -72,10 +72,8 @@ class LoginViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-
         overrideUserInterfaceStyle = .light
         view.backgroundColor = UIColor(white: 1.0, alpha: 1.0)
-
 
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         view.addGestureRecognizer(tapGesture)
@@ -98,21 +96,87 @@ class LoginViewController: UIViewController {
     @objc func dismissKeyboard() {
         view.endEditing(true)
     }
-
     @objc func handleLogin() {
-        // 로그인 처리 후 메인 화면으로 전환
-
-
         let mainTabBarController = MainTabBarController()
-               mainTabBarController.modalPresentationStyle = .fullScreen
-               present(mainTabBarController, animated: true, completion: nil)
+        mainTabBarController.modalPresentationStyle = .fullScreen
+        self.present(mainTabBarController, animated: true, completion: nil)
+        
+        /*guard let userId = idTextField.text, !userId.isEmpty,
+              let password = passwordTextField.text, !password.isEmpty else {
+            showAlert(title: "오류", message: "아이디와 비밀번호를 입력하세요.")
+            return
+        }
+
+        let urlString = "http://34.47.127.47:8080/user/login"
+        guard let url = URL(string: urlString) else {
+            showAlert(title: "오류", message: "잘못된 URL입니다.")
+            return
+        }
+
+        let requestBody: [String: String] = [
+            "id": userId,
+            "password": password
+        ]
+        
+        print("요청 데이터: \(requestBody)") // 요청 데이터 확인용
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: requestBody, options: [])
+        } catch {
+            showAlert(title: "오류", message: "요청 데이터를 생성할 수 없습니다.")
+            return
+        }
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.showAlert(title: "오류", message: "네트워크 오류: \(error.localizedDescription)")
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse,
+                      let data = data else {
+                    self.showAlert(title: "오류", message: "서버 오류가 발생했습니다.")
+                    return
+                }
+                
+                print("서버 응답 코드: \(httpResponse.statusCode)") // 서버 응답 코드 확인
+                print("서버 응답 데이터: \(String(data: data, encoding: .utf8) ?? "No Response")") // 서버 응답 데이터 확인
+                
+                if httpResponse.statusCode == 200 {
+                    do {
+                        let responseObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+                        print("로그인 성공: \(responseObject ?? [:])")
+
+                        // 로그인 성공 시 메인 화면으로 전환
+                        let mainTabBarController = MainTabBarController()
+                        mainTabBarController.modalPresentationStyle = .fullScreen
+                        self.present(mainTabBarController, animated: true, completion: nil)
+                    } catch {
+                        self.showAlert(title: "오류", message: "응답 데이터를 처리할 수 없습니다.")
+                    }
+                } else {
+                    self.showAlert(title: "오류", message: "서버 오류가 발생했습니다.")
+                }
+            }
+        }.resume()*/
     }
 
     @objc func openSignupPage() {
         let signupVC = SignupViewController()
         navigationController?.pushViewController(signupVC, animated: true)
     }
-    
+
+    func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        present(alert, animated: true)
+    }
+
     func setupConstraints() {
         NSLayoutConstraint.activate([
             // 로고 이미지 뷰
@@ -149,7 +213,6 @@ class LoginViewController: UIViewController {
         ])
     }
 }
-
 
 #Preview {
     LoginViewController()

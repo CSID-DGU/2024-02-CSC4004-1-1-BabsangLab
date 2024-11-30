@@ -5,11 +5,15 @@ class UserInfoViewController: UIViewController {
     let contentView = UIStackView()
     let titleLabel = UILabel()
     let startButton = UIButton(type: .system)
-    
+
     var textFields: [UITextField] = []
     var errorLabels: [UILabel] = []
-    var 기타TextField: UITextField?
-    var checkBoxes: [UIButton] = []
+
+    // SignupViewController에서 전달받는 데이터
+    var userId: String = ""
+    var password: String = ""
+
+    let keys = ["name", "age", "gender", "height", "weight", "med_history", "allergy"]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -19,7 +23,7 @@ class UserInfoViewController: UIViewController {
         setupTitleLabel()
         setupFormFields()
         setupStartButton()
-        
+
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         view.addGestureRecognizer(tapGesture)
     }
@@ -71,30 +75,12 @@ class UserInfoViewController: UIViewController {
 
         // 성별 선택
         addSegmentedControlSection(title: "성별", items: ["남성", "여성"], defaultIndex: 0)
-        
+
         addSection(title: "키", placeholder: "키를 입력하세요 (예: 170)")
         addSection(title: "체중", placeholder: "체중을 입력하세요 (예: 70)")
 
         addSection(title: "병력", placeholder: "병력 사항을 입력하세요")
         addSection(title: "알레르기", placeholder: "알레르기 정보를 입력하세요")
-
-        // 체중 관리
-        addSegmentedControlSection(title: "체중 관리", items: ["감량", "유지", "증량"], defaultIndex: 1)
-
-        // 식단 목표
-        let dietGoalsLabel = createTitleLabel(text: "식단 관리 목표")
-        contentView.addArrangedSubview(dietGoalsLabel)
-
-        let goals = ["체중 조절", "건강 증진", "근력 강화", "알레르기 예방", "개인 건강 문제(질병 등)", "기타:"]
-        for goal in goals {
-            if goal == "기타:" {
-                let 기타StackView = createCheckBoxWithTextField(goal: goal)
-                contentView.addArrangedSubview(기타StackView)
-            } else {
-                let checkBox = createCheckBox(title: goal)
-                contentView.addArrangedSubview(checkBox)
-            }
-        }
     }
 
     func addSection(title: String, placeholder: String) {
@@ -121,7 +107,7 @@ class UserInfoViewController: UIViewController {
     }
 
     func setupStartButton() {
-        startButton.setTitle("시작하기", for: .normal)
+        startButton.setTitle("등록하기", for: .normal)
         startButton.heightAnchor.constraint(equalToConstant: 44).isActive = true
         startButton.backgroundColor = UIColor.lightGray
         startButton.setTitleColor(UIColor.white, for: .normal)
@@ -140,28 +126,6 @@ class UserInfoViewController: UIViewController {
         return label
     }
 
-    func createCheckBox(title: String) -> UIButton {
-        let button = UIButton(type: .system)
-        button.setTitle("⬜️ \(title)", for: .normal)
-        button.setTitleColor(UIColor.black, for: .normal)
-        button.contentHorizontalAlignment = .left
-        button.addTarget(self, action: #selector(checkBoxTapped(_:)), for: .touchUpInside)
-        checkBoxes.append(button)
-        return button
-    }
-
-    func createCheckBoxWithTextField(goal: String) -> UIStackView {
-        let checkBox = createCheckBox(title: goal)
-        let textField = createTextField(placeholder: "기타를 입력하세요")
-        textField.isHidden = true
-        기타TextField = textField
-
-        let stackView = UIStackView(arrangedSubviews: [checkBox, textField])
-        stackView.axis = .vertical
-        stackView.spacing = 10
-        return stackView
-    }
-
     func createTitleLabel(text: String) -> UILabel {
         let label = UILabel()
         label.text = text
@@ -176,40 +140,23 @@ class UserInfoViewController: UIViewController {
         textField.placeholder = placeholder
         textField.font = UIFont.systemFont(ofSize: 16)
         textField.textColor = .black
-        textField.borderStyle = .none // 사각형 박스 제거
+        textField.borderStyle = .none
         textField.translatesAutoresizingMaskIntoConstraints = false
 
-        // 밑줄 추가
         let underline = UIView()
         underline.backgroundColor = .lightGray
         underline.translatesAutoresizingMaskIntoConstraints = false
         textField.addSubview(underline)
 
         NSLayoutConstraint.activate([
-            underline.heightAnchor.constraint(equalToConstant: 0.3), // 밑줄 두께
+            underline.heightAnchor.constraint(equalToConstant: 0.3),
             underline.leadingAnchor.constraint(equalTo: textField.leadingAnchor),
             underline.trailingAnchor.constraint(equalTo: textField.trailingAnchor),
-            underline.bottomAnchor.constraint(equalTo: textField.bottomAnchor, constant: 7) // 밑줄 위치
+            underline.bottomAnchor.constraint(equalTo: textField.bottomAnchor, constant: 7)
         ])
 
         textField.addTarget(self, action: #selector(validateForm), for: .editingChanged)
         return textField
-    }
-
-    @objc func checkBoxTapped(_ sender: UIButton) {
-        if sender.title(for: .normal)?.contains("☑️") == true {
-            sender.setTitle(sender.title(for: .normal)?.replacingOccurrences(of: "☑️", with: "⬜️"), for: .normal)
-            if sender.title(for: .normal)?.contains("기타:") == true {
-                기타TextField?.isHidden = true
-                기타TextField?.text = ""
-            }
-        } else {
-            sender.setTitle(sender.title(for: .normal)?.replacingOccurrences(of: "⬜️", with: "☑️"), for: .normal)
-            if sender.title(for: .normal)?.contains("기타:") == true {
-                기타TextField?.isHidden = false
-            }
-        }
-        validateForm()
     }
 
     @objc func validateForm() {
@@ -225,23 +172,47 @@ class UserInfoViewController: UIViewController {
             }
         }
 
-        if 기타TextField?.isHidden == false && 기타TextField?.text?.isEmpty == true {
-            isValid = false
-        }
-
-        let isAnyCheckBoxSelected = checkBoxes.contains { $0.title(for: .normal)?.contains("☑️") == true }
-        isValid = isValid && isAnyCheckBoxSelected
-
         startButton.isEnabled = isValid
         startButton.backgroundColor = isValid ? .systemGreen : .lightGray
     }
 
     @objc func startButtonTapped() {
-        // 시작 버튼 로직
-        print("정보 입력 완료")
+        // 명세서에 따라 순서대로 requestBody를 생성합니다.
+        var requestBody: [String: Any] = [
+            "userId": userId,
+            "password": password,
+            "name": textFields[0].text ?? "",
+            "age": Int(textFields[1].text ?? "") ?? 0,
+            "gender": (contentView.arrangedSubviews.compactMap { $0 as? UISegmentedControl }.first?.selectedSegmentIndex == 0) ? "MALE" : "FEMALE",
+            "height": Double(textFields[2].text ?? "") ?? 0.0,
+            "weight": Double(textFields[3].text ?? "") ?? 0.0,
+            "med_history": textFields[4].text ?? "",
+            "allergy": textFields[5].text ?? ""
+        ]
+
+        guard let url = URL(string: "http://34.47.127.47:8080/user/register") else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: requestBody, options: [])
+        } catch {
+            print("Error serializing JSON: \(error)")
+            return
+        }
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
+                return
+            }
+
+            guard let data = data else { return }
+            print(String(data: data, encoding: .utf8) ?? "No response")
+        }.resume()
     }
 }
-
 
 #Preview {
     UserInfoViewController()

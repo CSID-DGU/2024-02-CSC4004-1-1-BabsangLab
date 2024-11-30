@@ -2,13 +2,15 @@ import UIKit
 
 class ResultViewController: UIViewController {
     var selectedImage: UIImage?
-    var selectedFoodType: FoodType? 
+    var selectedFoodType: FoodType?
     let foodTypeLabel = UILabel()
     let activityIndicator = UIActivityIndicatorView(style: .large)
+    let nutrientInfoLabel = UILabel() // 영양소 정보를 표시할 레이블
 
-    // URL 설정: 단일 음식과 다중 음식 예측용
+    // 서버 URL 설정
     let singlePredictURL = "https://foodclassificationproject.du.r.appspot.com/predict"
     let multiPredictURL = "https://foodclassificationproject.du.r.appspot.com/multi_predict"
+    let analysisURL = "http://34.47.127.47:8080/analysis"
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,6 +48,13 @@ class ResultViewController: UIViewController {
         foodTypeLabel.textColor = .darkGray
         view.addSubview(foodTypeLabel)
 
+        nutrientInfoLabel.translatesAutoresizingMaskIntoConstraints = false
+        nutrientInfoLabel.textAlignment = .center
+        nutrientInfoLabel.font = UIFont.systemFont(ofSize: 14)
+        nutrientInfoLabel.textColor = .black
+        nutrientInfoLabel.numberOfLines = 0
+        view.addSubview(nutrientInfoLabel)
+
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         activityIndicator.hidesWhenStopped = true
         view.addSubview(activityIndicator)
@@ -60,7 +69,11 @@ class ResultViewController: UIViewController {
             foodTypeLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
 
             activityIndicator.topAnchor.constraint(equalTo: foodTypeLabel.bottomAnchor, constant: 20),
-            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+
+            nutrientInfoLabel.topAnchor.constraint(equalTo: activityIndicator.bottomAnchor, constant: 20),
+            nutrientInfoLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            nutrientInfoLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
         ])
     }
 
@@ -79,24 +92,27 @@ class ResultViewController: UIViewController {
         let boundary = UUID().uuidString
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
-        var imageData: Data?
-        if let resizedImage = resizeImage(image, targetSize: CGSize(width: 299, height: 299)) {
-            imageData = resizedImage.jpegData(compressionQuality: 0.8)
-        }
-
-        guard let imageData = imageData else {
+        guard let imageData = image.jpegData(compressionQuality: 1.0) else {
             foodTypeLabel.text = "이미지 데이터를 처리할 수 없습니다."
             return
         }
 
+       
+        // Multipart/form-data 형식으로 요청 바디 구성
         var body = Data()
+        let filename = "image.jpg"
+        let mimeType = "image/jpeg"
+
+        // 문자열을 Data로 변환 후 추가
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Disposition: form-data; name=\"image\"; filename=\"image.jpg\"\r\n".data(using: .utf8)!)
-        body.append("Content-Type: image/jpeg\r\n\r\n".data(using: .utf8)!)
-        body.append(imageData)
+        body.append("Content-Disposition: form-data; name=\"image\"; filename=\"\(filename)\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: \(mimeType)\r\n\r\n".data(using: .utf8)!)
+        body.append(imageData) // 이미지 데이터 추가
         body.append("\r\n".data(using: .utf8)!)
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
         request.httpBody = body
+
 
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
@@ -136,60 +152,81 @@ class ResultViewController: UIViewController {
     }
 
     func handlePredictionResponse(json: [String: Any], forMultipleFoods: Bool) {
-        if forMultipleFoods {
-            // 다중 음식 처리: 각 크롭된 이미지의 상위 1개 예측만 표시
-            if let predictions = json["predictions"] as? [[String: Any]] {
-                let results = predictions.compactMap { prediction -> String? in
-                    guard let foodName = prediction["class"] as? String else { return nil }
-                    return foodName
-                }
-                foodTypeLabel.text = "다중 음식 예측 결과: \(results.joined(separator: ", "))"
-            } else {
-                foodTypeLabel.text = "다중 음식 예측 결과를 처리할 수 없습니다."
-            }
-        } else {
-            // 단일 음식 처리
-            if let topPrediction = json["prediction"] as? [String: String],
-               let foodName = topPrediction["class"],
-               let confidence = topPrediction["confidence"] {
-                // 신뢰도가 80% 이상일 때, 상위 1개 결과 출력
-                foodTypeLabel.text = "예측 결과: \(foodName) (\(confidence))"
+        if let prediction = json["prediction"] as? [String: Any],
+           let foodName = prediction["class"] as? String,
+           let confidence = prediction["confidence"] as? Double {
+            if confidence >= 80 {
+                requestNutrientInfo(foodName: foodName)
             } else if let top3 = json["top_3"] as? [[String: String]] {
-                // 신뢰도가 80% 미만일 때, 상위 3개 결과 선택받기
                 let options = top3.compactMap { $0["class"] }
                 showTop3Selection(options: options)
-            } else {
-                foodTypeLabel.text = "예측 결과를 처리할 수 없습니다."
             }
         }
-    }
-
-
-    func resizeImage(_ image: UIImage, targetSize: CGSize) -> UIImage? {
-        let size = image.size
-        let widthRatio = targetSize.width / size.width
-        let heightRatio = targetSize.height / size.height
-        let newSize = CGSize(
-            width: size.width * min(widthRatio, heightRatio),
-            height: size.height * min(widthRatio, heightRatio)
-        )
-        let rect = CGRect(origin: .zero, size: newSize)
-        UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
-        image.draw(in: rect)
-        let newImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return newImage
     }
 
     func showTop3Selection(options: [String]) {
         let alert = UIAlertController(title: "예측 결과", message: "결과 중 하나를 선택하세요.", preferredStyle: .actionSheet)
         for option in options {
             alert.addAction(UIAlertAction(title: option, style: .default, handler: { _ in
-                self.foodTypeLabel.text = "선택한 음식: \(option)"
+                self.requestNutrientInfo(foodName: option)
             }))
         }
         alert.addAction(UIAlertAction(title: "취소", style: .cancel, handler: nil))
         present(alert, animated: true, completion: nil)
+    }
+
+    func requestNutrientInfo(foodName: String) {
+        guard let url = URL(string: "\(analysisURL)?foodName=\(foodName)") else {
+            foodTypeLabel.text = "영양소 분석 URL이 잘못되었습니다."
+            return
+        }
+
+        activityIndicator.startAnimating()
+        nutrientInfoLabel.text = ""
+
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            DispatchQueue.main.async {
+                self?.activityIndicator.stopAnimating()
+            }
+
+            if let error = error {
+                DispatchQueue.main.async {
+                    self?.foodTypeLabel.text = "영양소 분석 중 오류 발생: \(error.localizedDescription)"
+                }
+                return
+            }
+
+            guard let data = data else {
+                DispatchQueue.main.async {
+                    self?.foodTypeLabel.text = "서버 응답 데이터가 없습니다."
+                }
+                return
+            }
+
+            do {
+                if let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                   let responseDto = json["ResponseDto"] as? [String: Any],
+                   let analysis = responseDto["AnalysisDto"] as? [String: Any] {
+                    DispatchQueue.main.async {
+                        self?.nutrientInfoLabel.text = """
+                        칼로리: \(analysis["calories"] ?? 0)
+                        지방: \(analysis["fat"] ?? 0)
+                        단백질: \(analysis["protein"] ?? 0)
+                        탄수화물: \(analysis["carbs"] ?? 0)
+                        알레르기: \(analysis["allergy"] ?? "없음")
+                        """
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                        self?.foodTypeLabel.text = "영양소 정보를 처리할 수 없습니다."
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self?.foodTypeLabel.text = "JSON 파싱 오류: \(error.localizedDescription)"
+                }
+            }
+        }.resume()
     }
 }
 
