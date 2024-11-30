@@ -30,7 +30,13 @@ public class Food {
     private Double carbs;
 
     @Column
+    @Enumerated(EnumType.STRING)
     private Allergy allergy;
+//    @ElementCollection
+//    @CollectionTable(name = "user_allergies", joinColumns = @JoinColumn(name = "user_id"))
+//    @Column(name = "allergy")
+//    private Set<String> allergy = new HashSet<>();
+
 
     @Builder
     public Food(Long id, String foodName, Double calories, Double protein, Double fat, Double carbs, Allergy allergy){
