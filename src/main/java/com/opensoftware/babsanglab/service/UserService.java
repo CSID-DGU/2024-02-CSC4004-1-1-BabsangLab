@@ -1,9 +1,13 @@
 package com.opensoftware.babsanglab.service;
 
+import com.opensoftware.babsanglab.domain.Food;
 import com.opensoftware.babsanglab.domain.User;
 import com.opensoftware.babsanglab.dto.request.RegisterRequestDto;
 import com.opensoftware.babsanglab.dto.request.UpdateRequestDto;
+import com.opensoftware.babsanglab.dto.response.AnalysisResponseDto;
+import com.opensoftware.babsanglab.dto.response.GetPwResponseDto;
 import com.opensoftware.babsanglab.dto.response.RegisterResponseDto;
+import com.opensoftware.babsanglab.dto.response.ResponseDto;
 import com.opensoftware.babsanglab.exception.ApiException;
 import com.opensoftware.babsanglab.exception.ErrorDefine;
 import com.opensoftware.babsanglab.repository.UserRepository;
@@ -64,6 +68,15 @@ public class UserService {
         return RegisterResponseDto.builder()
                 .message("사용 가능한 아이디입니다")
                 .build();
+    }
+
+    public GetPwResponseDto getPw(String name){
+            User user = userRepository.findByName(name)
+                    .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+
+        return new GetPwResponseDto(
+                user.getPassword()
+        );
     }
     public Boolean updateUser(UpdateRequestDto updateRequestDto) {
         User user = userRepository.findByUserId(updateRequestDto.getUserId())
