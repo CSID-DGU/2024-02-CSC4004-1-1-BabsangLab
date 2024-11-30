@@ -2,6 +2,7 @@ package com.opensoftware.babsanglab.controller;
 
 import com.opensoftware.babsanglab.dto.request.RegisterRequestDto;
 import com.opensoftware.babsanglab.dto.request.UpdateRequestDto;
+import com.opensoftware.babsanglab.dto.response.GetPwResponseDto;
 import com.opensoftware.babsanglab.dto.response.RegisterResponseDto;
 import com.opensoftware.babsanglab.dto.response.ResponseDto;
 import com.opensoftware.babsanglab.service.UserService;
@@ -30,6 +31,13 @@ public class UserController {
         return new ResponseDto<>(userService.checkId(userId));
     }
 
+    @GetMapping("/pw")
+    public ResponseDto<GetPwResponseDto> getPw(
+            @RequestParam(name="name") String name
+    ){
+        return new ResponseDto<>(userService.getPw(name));
+    }
+
     @PutMapping("/update")
     public ResponseDto<Boolean> updateUser(
             @RequestBody UpdateRequestDto updateRequestDto
@@ -50,6 +58,5 @@ public class UserController {
     public ResponseDto<Boolean> test() {
         return new ResponseDto<>(true);
     }
-
 
 }
