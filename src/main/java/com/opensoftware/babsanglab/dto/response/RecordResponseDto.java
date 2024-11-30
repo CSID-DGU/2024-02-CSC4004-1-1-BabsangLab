@@ -9,9 +9,11 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class RecordResponseDto {
+    String foodName;
     Mealtime mealtime;
     Double calories;
     Double fat;
     Double protein;
     Double carbs;
+    Double intake_amount;
 }

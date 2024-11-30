@@ -52,6 +52,7 @@ public class AnalysisService {
                 .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
         Food food = analysisRepository.findByfoodName(analysisRequestDto.getFoodName())
                 .orElseThrow(() -> new ApiException(ErrorDefine.FOOD_NOT_FOUND));
+        Double intakeAmount = analysisRequestDto.getIntake_amount();
         // Record 객체 생성
         Record record = Record.builder()
                 .user(user)
@@ -59,7 +60,7 @@ public class AnalysisService {
                 .date(analysisRequestDto.getDate())
                 .mealtime(analysisRequestDto.getMealtime())
                 .foodName(analysisRequestDto.getFoodName())
-                .intake_amount(analysisRequestDto.getIntake_amount()) // 수정된 필드명
+                .intake_amount(intakeAmount) // 수정된 필드명
                 .build();
 
         // Record 저장
@@ -68,10 +69,10 @@ public class AnalysisService {
 
         // Response DTO 생성 및 반환
         return new AnalysisResponseDto(
-                food.getCalories(),
-                food.getProtein(),
-                food.getFat(),
-                food.getCarbs(),
+                food.getCalories()*intakeAmount,
+                food.getProtein()*intakeAmount,
+                food.getFat()*intakeAmount,
+                food.getCarbs()*intakeAmount,
                 food.getAllergy()
         );
     }
