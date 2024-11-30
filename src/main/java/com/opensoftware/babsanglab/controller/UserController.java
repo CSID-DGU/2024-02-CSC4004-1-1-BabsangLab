@@ -23,6 +23,13 @@ public class UserController {
         return new ResponseDto<>(userService.register(registerRequestDto));
     }
 
+    @GetMapping("/register")
+    public ResponseDto<RegisterResponseDto> checkId(
+            @RequestParam(name="userId") String userId
+        ) {
+        return new ResponseDto<>(userService.checkId(userId));
+    }
+
     @PutMapping("/update")
     public ResponseDto<Boolean> updateUser(
             @RequestBody UpdateRequestDto updateRequestDto
@@ -43,5 +50,6 @@ public class UserController {
     public ResponseDto<Boolean> test() {
         return new ResponseDto<>(true);
     }
+
 
 }

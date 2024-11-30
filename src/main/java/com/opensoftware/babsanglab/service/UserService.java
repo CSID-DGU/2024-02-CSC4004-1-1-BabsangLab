@@ -55,11 +55,21 @@ public class UserService {
                     .build();
     }
 
+    public RegisterResponseDto checkId(String userId){
+        if (userRepository.findByUserId(userId).isPresent())
+            return RegisterResponseDto.builder()
+                    .message("이미 존재하는 아이디입니다")
+                    .build();
+
+        return RegisterResponseDto.builder()
+                .message("사용 가능한 아이디입니다")
+                .build();
+    }
     public Boolean updateUser(UpdateRequestDto updateRequestDto) {
         User user = userRepository.findByUserId(updateRequestDto.getUserId())
                 .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
 
-        // 업데이트 가능한 필드 수정
+        // 업데이트 가능한 필드 수정)
         if (updateRequestDto.getPassword() != null) user.setPassword(updateRequestDto.getPassword());
         if (updateRequestDto.getAge() != null) user.setAge(updateRequestDto.getAge());
         if (updateRequestDto.getGender() != null) user.setGender(updateRequestDto.getGender());
