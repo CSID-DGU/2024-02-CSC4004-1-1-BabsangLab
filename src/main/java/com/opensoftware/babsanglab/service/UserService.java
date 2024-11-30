@@ -5,7 +5,7 @@ import com.opensoftware.babsanglab.domain.User;
 import com.opensoftware.babsanglab.dto.request.RegisterRequestDto;
 import com.opensoftware.babsanglab.dto.request.UpdateRequestDto;
 import com.opensoftware.babsanglab.dto.response.AnalysisResponseDto;
-import com.opensoftware.babsanglab.dto.response.GetPwResponseDto;
+import com.opensoftware.babsanglab.dto.response.NotifyResponseDto;
 import com.opensoftware.babsanglab.dto.response.RegisterResponseDto;
 import com.opensoftware.babsanglab.dto.response.ResponseDto;
 import com.opensoftware.babsanglab.exception.ApiException;
@@ -70,11 +70,11 @@ public class UserService {
                 .build();
     }
 
-    public GetPwResponseDto getPw(String name){
+    public NotifyResponseDto getPw(String name){
             User user = userRepository.findByName(name)
                     .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
 
-        return new GetPwResponseDto(
+        return new NotifyResponseDto(
                 user.getPassword()
         );
     }
