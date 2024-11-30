@@ -9,6 +9,7 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class AnalysisResponseDto {
+    String foodName;
     Double calories;
     Double fat;
     Double protein;

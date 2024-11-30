@@ -37,6 +37,7 @@ public class AnalysisService {
 
         // Response DTO 생성 및 반환
         return new AnalysisResponseDto(
+                food.getFoodName(),
                 food.getCalories(),
                 food.getProtein(),
                 food.getFat(),
@@ -80,6 +81,7 @@ public class AnalysisService {
 
         // Response DTO 생성 및 반환
         return new AnalysisResponseDto(
+                food.getFoodName(),
                 food.getCalories()*intakeAmount,
                 food.getProtein()*intakeAmount,
                 food.getFat()*intakeAmount,
