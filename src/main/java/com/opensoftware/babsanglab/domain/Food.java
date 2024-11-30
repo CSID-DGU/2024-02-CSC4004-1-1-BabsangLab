@@ -36,15 +36,17 @@ public class Food {
 //    @CollectionTable(name = "user_allergies", joinColumns = @JoinColumn(name = "user_id"))
 //    @Column(name = "allergy")
 //    private Set<String> allergy = new HashSet<>();
-
+    @Column
+    private String medical_issue;
 
     @Builder
-    public Food(String foodName, Double calories, Double protein, Double fat, Double carbs, Allergy allergy){
+    public Food(String foodName, Double calories, Double protein, Double fat, Double carbs, Allergy allergy, String medical_issue){
         this.foodName = foodName;
         this.calories = calories;
         this.protein = protein;
         this.fat = fat;
         this.carbs = carbs;
         this.allergy = allergy;
+        this.medical_issue = medical_issue;
     }
 }
