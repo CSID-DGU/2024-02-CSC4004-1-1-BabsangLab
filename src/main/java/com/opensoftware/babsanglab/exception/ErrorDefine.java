@@ -22,7 +22,7 @@ public enum ErrorDefine {
 
     // NOT_FOUND: 404
     USER_NOT_FOUND("4040", HttpStatus.NOT_FOUND, "Not Found: User Not Found"),
-    ITEM_NOT_FOUND("4041", HttpStatus.NOT_FOUND, "Not Found: Item Not Found"),
+    FOOD_NOT_FOUND("4041", HttpStatus.NOT_FOUND, "Not Found: Item Not Found"),
     BASKET_IS_EMPTY("4042", HttpStatus.NOT_FOUND, "Not Found: Basket is Empty"),
     ORDER_NOT_FOUND("4043", HttpStatus.NOT_FOUND, "Not Found: Order Not Found"),
     BAKSET_NOT_FOUND("4044", HttpStatus.NOT_FOUND, "Not Found: Basket Not Found"),
