@@ -2,6 +2,7 @@ package com.opensoftware.babsanglab.controller;
 
 import com.opensoftware.babsanglab.dto.request.AnalysisRequestDto;
 import com.opensoftware.babsanglab.dto.response.AnalysisResponseDto;
+import com.opensoftware.babsanglab.dto.response.NotifyResponseDto;
 import com.opensoftware.babsanglab.dto.response.ResponseDto;
 import com.opensoftware.babsanglab.service.AnalysisService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class AnalysisController {
 
 
     @PostMapping("/record")
-    public ResponseDto<AnalysisResponseDto> analysisRecord(
+    public ResponseDto<Object> analysisRecord(
             @RequestBody AnalysisRequestDto analysisRequestDto
     ){
         return new ResponseDto<>(analysisService.analysisRecord(analysisRequestDto));
@@ -49,15 +50,26 @@ public class AnalysisController {
     }
 
     @PostMapping("/foods/record")
-    public ResponseDto<List<AnalysisResponseDto>> analysisRecordAllFoods(
+    public ResponseDto<List<Object>> analysisRecordAllFoods(
             @RequestBody List<AnalysisRequestDto> analysisRequestDtos
     ) {
-        List<AnalysisResponseDto> analysisResponseDtoList = analysisRequestDtos.stream()
-                .map(analysisService::analysisRecord)  // 각 음식에 대한 섭취 기록 처리
+        List<Object> resultList = analysisRequestDtos.stream()
+                .map(analysisRequestDto -> {
+                    Object result = analysisService.analysisRecord(analysisRequestDto);
+
+                    // NotifyResponseDto 처리
+                    if (result instanceof NotifyResponseDto) {
+                        return result; // NotifyResponseDto 반환
+                    }
+
+                    // AnalysisResponseDto 처리
+                    return result;
+                })
                 .collect(Collectors.toList());
 
-        return new ResponseDto<>(analysisResponseDtoList);
+        return new ResponseDto<>(resultList);
     }
+
 
 
 
