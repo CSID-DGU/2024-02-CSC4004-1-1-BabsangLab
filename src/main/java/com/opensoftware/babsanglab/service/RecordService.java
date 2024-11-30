@@ -89,8 +89,10 @@ public class RecordService {
     double getRecommend(Weight_goal weight_goal, Double weight) {
         if (weight_goal == Weight_goal.gain) {
             return weight * 30 * 1.1;
+        } else if (weight_goal == Weight_goal.lose){
+            return weight * 30 * 0.9;
         } else {
-            return weight * 30; // 기본 값
+            return weight * 30 ;
         }
     }
 }
