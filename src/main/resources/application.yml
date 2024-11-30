@@ -15,6 +15,21 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+        ddl-auto: update
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    org.springframework: debug
+    com.opensoftware.babsanglab: debug
+
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
+
+
 
 
 
