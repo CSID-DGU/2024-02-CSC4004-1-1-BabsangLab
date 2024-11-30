@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: babsanglab
+
+  config:
+    import: optional:file:.env[.properties]
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://babsangdb.c7q6c2i0ozrp.ap-northeast-2.rds.amazonaws.com:3306/babsang_db
+    username: admin
+    password: babsang1234
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        ddl-auto: update
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    org.springframework: debug
+    com.opensoftware.babsanglab: debug
+
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
+
+
+
+
+

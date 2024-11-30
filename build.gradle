@@ -10,6 +10,11 @@ jar {
 
 group = 'com.opensoftware'
 version = '0.0.1-SNAPSHOT'
+// bootJar 태스크에서 파일 이름 설정
+bootJar {
+	archiveFileName = "babsanglab-${version}-${System.currentTimeMillis()}.jar"
+}
+
 
 java {
 	toolchain {
