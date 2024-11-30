@@ -50,9 +50,12 @@ public class AnalysisService {
         // User 객체를 name으로 조회
         User user = userRepository.findByName(analysisRequestDto.getName())
                 .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+        Food food = analysisRepository.findByfoodName(analysisRequestDto.getFoodName())
+                .orElseThrow(() -> new ApiException(ErrorDefine.FOOD_NOT_FOUND));
         // Record 객체 생성
         Record record = Record.builder()
                 .user(user)
+                .food(food)
                 .date(analysisRequestDto.getDate())
                 .mealtime(analysisRequestDto.getMealtime())
                 .foodName(analysisRequestDto.getFoodName())
@@ -61,10 +64,6 @@ public class AnalysisService {
 
         // Record 저장
         recordRepository.save(record);
-
-        // Food 객체 조회
-        Food food = analysisRepository.findByfoodName(analysisRequestDto.getFoodName())
-                .orElseThrow(() -> new ApiException(ErrorDefine.FOOD_NOT_FOUND));
 
 
         // Response DTO 생성 및 반환
