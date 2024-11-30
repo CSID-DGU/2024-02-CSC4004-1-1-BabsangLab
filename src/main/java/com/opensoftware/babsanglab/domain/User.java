@@ -5,6 +5,7 @@ import com.opensoftware.babsanglab.domain.enums.Gender;
 import com.opensoftware.babsanglab.domain.enums.Weight_goal;
 import jakarta.persistence.*;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
@@ -15,6 +16,7 @@ import java.util.Set;
 @Table
 @NoArgsConstructor
 @Setter
+@Getter
 
 public class User {
     @Id
