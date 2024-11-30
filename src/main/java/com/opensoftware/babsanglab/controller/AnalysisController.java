@@ -1,12 +1,10 @@
 package com.opensoftware.babsanglab.controller;
 
+import com.opensoftware.babsanglab.dto.request.AnalysisRequestDto;
 import com.opensoftware.babsanglab.dto.response.AnalysisResponseDto;
 import com.opensoftware.babsanglab.dto.response.ResponseDto;
 import com.opensoftware.babsanglab.service.AnalysisService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,5 +19,12 @@ public class AnalysisController {
             @RequestParam(name = "foodName") String foodName
     ) {
         return new ResponseDto<>(analysisService.analysis(foodName));
+    }
+
+    @PostMapping("/record")
+    public ResponseDto<AnalysisResponseDto> analysisrecord(
+            @RequestBody AnalysisRequestDto analysisRequestDto
+    ){
+        return new ResponseDto<>(analysisService.analysisRecord(analysisRequestDto));
     }
 }
