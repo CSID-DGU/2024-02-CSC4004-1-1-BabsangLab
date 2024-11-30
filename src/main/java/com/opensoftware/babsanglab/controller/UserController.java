@@ -15,14 +15,14 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
     @PostMapping("/register")
-    public ResponseDto<RegisterResponseDto> register(
+    public ResponseDto<NotifyResponseDto> register(
             @RequestBody  RegisterRequestDto registerRequestDto
             ) {
         return new ResponseDto<>(userService.register(registerRequestDto));
     }
 
     @GetMapping("/register")
-    public ResponseDto<RegisterResponseDto> checkId(
+    public ResponseDto<NotifyResponseDto> checkId(
             @RequestParam(name="userId") String userId
         ) {
         return new ResponseDto<>(userService.checkId(userId));

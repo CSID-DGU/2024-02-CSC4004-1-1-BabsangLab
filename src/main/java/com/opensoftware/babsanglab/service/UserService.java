@@ -5,10 +5,12 @@ import com.opensoftware.babsanglab.dto.request.RegisterRequestDto;
 import com.opensoftware.babsanglab.dto.request.UpdateRequestDto;
 import com.opensoftware.babsanglab.dto.response.NotifyResponseDto;
 import com.opensoftware.babsanglab.dto.response.RegisterResponseDto;
+import com.opensoftware.babsanglab.dto.response.ResponseDto;
 import com.opensoftware.babsanglab.exception.ApiException;
 import com.opensoftware.babsanglab.exception.ErrorDefine;
 import com.opensoftware.babsanglab.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Transactional
 @Slf4j
+@Getter
 public class UserService {
     private final UserRepository userRepository;
 //    public void updateUserAllergies(Long userId, Set<String> allergies) {
@@ -25,7 +28,7 @@ public class UserService {
 //        user.setAllergy(allergies);
 //        userRepository.save(user);
 //    }
-    public RegisterResponseDto register(RegisterRequestDto registerRequestDto){
+    public NotifyResponseDto register(RegisterRequestDto registerRequestDto){
 //        User user = userRepository.findById(10l)
 //                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
 
@@ -50,18 +53,18 @@ public class UserService {
 //                    .message("회원가입이 잘 되었습니다")
 //                    .build();
 
-        return RegisterResponseDto.builder()
+        return NotifyResponseDto.builder()
                     .message("회원가입이 잘 되었습니다")
                     .build();
     }
 
-    public RegisterResponseDto checkId(String userId){
+    public NotifyResponseDto checkId(String userId){
         if (userRepository.findByUserId(userId).isPresent())
-            return RegisterResponseDto.builder()
+            return NotifyResponseDto.builder()
                     .message("이미 존재하는 아이디입니다")
                     .build();
 
-        return RegisterResponseDto.builder()
+        return NotifyResponseDto.builder()
                 .message("사용 가능한 아이디입니다")
                 .build();
     }
