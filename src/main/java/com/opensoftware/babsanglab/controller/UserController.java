@@ -2,15 +2,12 @@ package com.opensoftware.babsanglab.controller;
 
 import com.opensoftware.babsanglab.dto.request.RegisterRequestDto;
 import com.opensoftware.babsanglab.dto.request.UpdateRequestDto;
-import com.opensoftware.babsanglab.dto.response.GetPwResponseDto;
+import com.opensoftware.babsanglab.dto.response.NotifyResponseDto;
 import com.opensoftware.babsanglab.dto.response.RegisterResponseDto;
 import com.opensoftware.babsanglab.dto.response.ResponseDto;
 import com.opensoftware.babsanglab.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashSet;
-import java.util.List;
 
 @RestController
 @RequestMapping("/user")
@@ -32,7 +29,7 @@ public class UserController {
     }
 
     @GetMapping("/pw")
-    public ResponseDto<GetPwResponseDto> getPw(
+    public ResponseDto<NotifyResponseDto> getPw(
             @RequestParam(name="name") String name
     ){
         return new ResponseDto<>(userService.getPw(name));
