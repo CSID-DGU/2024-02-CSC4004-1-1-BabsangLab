@@ -1,5 +1,6 @@
 package com.opensoftware.babsanglab.controller;
 
+import com.opensoftware.babsanglab.dto.response.RateResponseDto;
 import com.opensoftware.babsanglab.dto.response.RecordResponseDto;
 import com.opensoftware.babsanglab.dto.response.ResponseDto;
 import com.opensoftware.babsanglab.service.RecordService;
@@ -22,5 +23,11 @@ public class RecordController {
         return new ResponseDto<>(recordService.recordDay(userName,date));
     }
 
-
+    @GetMapping("/rate")
+    public ResponseDto<Object> rateDay(
+            @RequestParam(name="userName") String userName,
+            @RequestParam(name="date") LocalDate date
+    ){
+        return new ResponseDto<>(recordService.rateDay(userName,date));
+    }
 }
