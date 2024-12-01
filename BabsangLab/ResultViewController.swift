@@ -1,5 +1,7 @@
 import UIKit
 
+// MARK: - ResultViewController
+
 class ResultViewController: UIViewController {
     var selectedImage: UIImage?
     var selectedFoodType: FoodType?
@@ -13,6 +15,9 @@ class ResultViewController: UIViewController {
     let servingSizeStepper = UIStepper()
     let saveButton = UIButton()
     let tableView = UITableView()
+    
+    // 추가된 UI 요소: "원하시는 음식이 아니라면?" 라벨
+    let notDesiredFoodLabel = UILabel()
     
     // 데이터 저장을 위한 변수
     var singleFoodName: String?
@@ -28,7 +33,7 @@ class ResultViewController: UIViewController {
     let multiPredictURL = "https://foodclassificationproject.du.r.appspot.com/multi_predict"
     
     // 영양소 정보 API URL
-    let nutritionAPIBaseURL = "http://34.47.127.47:8080/analysis"
+    let nutritionAPIBaseURL = "http://34.64.172.57:8080/analysis"
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -51,6 +56,7 @@ class ResultViewController: UIViewController {
     }
     
     func setupResultUI() {
+        // 이미지 뷰 설정
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -60,6 +66,7 @@ class ResultViewController: UIViewController {
             imageView.image = image
         }
         
+        // 음식 타입 라벨 설정
         foodTypeLabel.translatesAutoresizingMaskIntoConstraints = false
         foodTypeLabel.textAlignment = .center
         foodTypeLabel.font = UIFont.boldSystemFont(ofSize: 15)
@@ -67,17 +74,19 @@ class ResultViewController: UIViewController {
         foodTypeLabel.numberOfLines = 0
         view.addSubview(foodTypeLabel)
         
+        // 활동 인디케이터 설정
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         activityIndicator.hidesWhenStopped = true
         view.addSubview(activityIndicator)
         
-        // 추가된 UI 요소 설정
+        // 인분 수 라벨 설정
         servingSizeLabel.translatesAutoresizingMaskIntoConstraints = false
         servingSizeLabel.text = "인분: 1"
         servingSizeLabel.font = UIFont.systemFont(ofSize: 16)
         servingSizeLabel.isHidden = true // 초기에는 숨김
         view.addSubview(servingSizeLabel)
         
+        // 스테퍼 설정
         servingSizeStepper.translatesAutoresizingMaskIntoConstraints = false
         servingSizeStepper.minimumValue = 1
         servingSizeStepper.value = 1
@@ -85,6 +94,7 @@ class ResultViewController: UIViewController {
         servingSizeStepper.addTarget(self, action: #selector(servingSizeChanged(_:)), for: .valueChanged)
         view.addSubview(servingSizeStepper)
         
+        // 저장 버튼 설정
         saveButton.translatesAutoresizingMaskIntoConstraints = false
         saveButton.setTitle("식단 기록하기", for: .normal)
         saveButton.backgroundColor = .systemGreen
@@ -102,26 +112,56 @@ class ResultViewController: UIViewController {
         tableView.register(MultiFoodCell.self, forCellReuseIdentifier: "MultiFoodCell")
         view.addSubview(tableView)
         
+        // "원하시는 음식이 아니라면?" 라벨 설정
+        notDesiredFoodLabel.translatesAutoresizingMaskIntoConstraints = false
+        notDesiredFoodLabel.text = "원하시는 음식이 아니신가요? 직접 추가하세요!"
+        notDesiredFoodLabel.font = UIFont.systemFont(ofSize: 16)
+        notDesiredFoodLabel.textColor = .systemBlue
+        notDesiredFoodLabel.textAlignment = .center
+        notDesiredFoodLabel.isUserInteractionEnabled = true // 터치 가능하도록 설정
+        
+        // 라벨에 밑줄 추가 (예쁘게 보이도록)
+        let attributedString = NSMutableAttributedString(string: notDesiredFoodLabel.text ?? "")
+        attributedString.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: NSRange(location: 0, length: attributedString.length))
+        notDesiredFoodLabel.attributedText = attributedString
+        
+        view.addSubview(notDesiredFoodLabel)
+        
+        // 탭 제스처 인식기 추가
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(notDesiredFoodTapped))
+        notDesiredFoodLabel.addGestureRecognizer(tapGesture)
+        
+        // 오토레이아웃 설정
         NSLayoutConstraint.activate([
+            // 이미지 뷰 제약조건
             imageView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
             imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             imageView.heightAnchor.constraint(equalToConstant: 300),
             
+            // 음식 타입 라벨 제약조건
             foodTypeLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 20),
             foodTypeLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             foodTypeLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             
-            activityIndicator.topAnchor.constraint(equalTo: foodTypeLabel.bottomAnchor, constant: 20),
+            // "원하시는 음식이 아니라면?" 라벨 제약조건
+            notDesiredFoodLabel.topAnchor.constraint(equalTo: foodTypeLabel.bottomAnchor, constant: 10),
+            notDesiredFoodLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            notDesiredFoodLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            
+            // 활동 인디케이터 제약조건
+            activityIndicator.topAnchor.constraint(equalTo: notDesiredFoodLabel.bottomAnchor, constant: 20),
             activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            // 단일 음식일 때의 UI 배치
+            // 인분 수 라벨 제약조건 (단일 음식)
             servingSizeLabel.topAnchor.constraint(equalTo: foodTypeLabel.bottomAnchor, constant: 20),
             servingSizeLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
+            // 스테퍼 제약조건 (단일 음식)
             servingSizeStepper.topAnchor.constraint(equalTo: servingSizeLabel.bottomAnchor, constant: 10),
             servingSizeStepper.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
+            // 저장 버튼 제약조건
             saveButton.topAnchor.constraint(equalTo: servingSizeStepper.bottomAnchor, constant: 20),
             saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             saveButton.widthAnchor.constraint(equalToConstant: 200),
@@ -150,6 +190,31 @@ class ResultViewController: UIViewController {
             // 다중 음식 식단 기록하기 요청
             recordMultipleFoods()
         }
+    }
+    
+    // MARK: - "원하시는 음식이 아니라면?" 라벨 탭 핸들러
+    
+    @objc func notDesiredFoodTapped() {
+        let alert = UIAlertController(title: "음식 추가", message: "직접 음식을 추가하시겠습니까?", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "네", style: .default, handler: { _ in
+            self.navigateToSearchViewController()
+        }))
+        alert.addAction(UIAlertAction(title: "아니요", style: .cancel, handler: nil))
+        present(alert, animated: true, completion: nil)
+    }
+    
+    func navigateToSearchViewController() {
+        guard let navigationController = self.navigationController else { return }
+        
+        // 메인 화면으로 팝 (루트 뷰 컨트롤러로 이동)
+        navigationController.popToRootViewController(animated: false)
+        
+        // SearchViewController 인스턴스 생성
+        let searchVC = SearchViewController()
+        searchVC.modalPresentationStyle = .fullScreen
+        
+        // SearchViewController로 푸시
+        navigationController.pushViewController(searchVC, animated: true)
     }
     
     func predictFood(image: UIImage, url: String, forMultipleFoods: Bool) {
@@ -193,7 +258,7 @@ class ResultViewController: UIViewController {
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             // 응답 정보 로그 출력
             if let httpResponse = response as? HTTPURLResponse {
-                print("📥 서버로부터 응답을 받았습니다: 상태 코드 \(httpResponse.statusCode)")
+                print("📥 서버 응답 상태 코드: \(httpResponse.statusCode)")
             }
             
             DispatchQueue.main.async {
@@ -528,7 +593,7 @@ class ResultViewController: UIViewController {
     
     // 식단 기록하기 요청 함수 (단일 음식)
     func recordSingleFood(foodName: String, servingSize: Int) {
-        let urlString = "http://34.47.127.47:8080/analysis/record"
+        let urlString = "http://34.64.172.57:8080/analysis/record"
         guard let url = URL(string: urlString) else {
             print("❌ 식단 기록 API URL이 잘못되었습니다.")
             return
@@ -554,7 +619,7 @@ class ResultViewController: UIViewController {
             "foodName": foodName,
             "date": currentDate,
             "mealtime": mealtime,
-            "intake_amount": servingSize
+            "intake_amount": servingSize // 배열이 아닌 정수로 전송
         ]
         
         do {
@@ -573,6 +638,9 @@ class ResultViewController: UIViewController {
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 print("❌ 식단 기록 요청 오류: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.showAlert(title: "오류", message: "식단 기록 중 오류가 발생했습니다: \(error.localizedDescription)")
+                }
                 return
             }
             
@@ -583,15 +651,18 @@ class ResultViewController: UIViewController {
             // 응답 데이터 처리 (필요에 따라 추가)
             
             DispatchQueue.main.async {
-                // 메인 화면으로 돌아가기
-                self.navigationController?.popToRootViewController(animated: true)
+                // 성공 메시지 표시
+                self.showAlert(title: "성공", message: "식단이 성공적으로 기록되었습니다.") {
+                    // 메인 화면으로 돌아가기
+                    self.navigationController?.popToRootViewController(animated: true)
+                }
             }
         }.resume()
     }
-    
+
     // 식단 기록하기 요청 함수 (다중 음식)
     func recordMultipleFoods() {
-        let urlString = "http://34.47.127.47:8080/analysis/foods/record"
+        let urlString = "http://34.64.172.57:8080/analysis/foods/record"
         guard let url = URL(string: urlString) else {
             print("❌ 식단 기록 API URL이 잘못되었습니다.")
             return
@@ -612,42 +683,62 @@ class ResultViewController: UIViewController {
         // 사용자 이름 가져오기 (회원가입 시 저장된 이름 사용)
         let userName = getUserName()
         
-        let parameters: [String: Any] = [
-            "name": userName,
-            "foodNames": multipleFoodNames,
-            "date": currentDate,
-            "mealtime": mealtime,
-            "intake_amounts": multipleFoodServingSizes
-        ]
+        // 각 음식 항목을 개별 FoodRecord 객체로 변환하여 배열에 담기
+        var foodRecords: [FoodRecord] = []
+        for (index, foodName) in multipleFoodNames.enumerated() {
+            let servingSize = multipleFoodServingSizes.indices.contains(index) ? multipleFoodServingSizes[index] : 1
+            let record = FoodRecord(
+                name: userName,
+                intake_amount: servingSize,
+                date: currentDate,
+                mealtime: mealtime,
+                foodName: foodName
+            )
+            foodRecords.append(record)
+        }
         
+        // JSON 직렬화
         do {
-            let jsonData = try JSONSerialization.data(withJSONObject: parameters, options: [])
+            let jsonData = try JSONEncoder().encode(foodRecords)
             request.httpBody = jsonData
             
             // 요청 로그 출력
             if let jsonString = String(data: jsonData, encoding: .utf8) {
-                print("📤 다중 음식 식단 기록 요청: \(jsonString)")
+                print("📤 다중 음식 식단 기록 요청 JSON: \(jsonString)")
             }
         } catch {
             print("❌ JSON 직렬화 오류: \(error.localizedDescription)")
             return
         }
         
+        // URLSession을 사용하여 요청 전송
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
                 print("❌ 식단 기록 요청 오류: \(error.localizedDescription)")
+                DispatchQueue.main.async {
+                    self.showAlert(title: "오류", message: "식단 기록 중 오류가 발생했습니다: \(error.localizedDescription)")
+                }
                 return
             }
             
             if let httpResponse = response as? HTTPURLResponse {
                 print("📥 다중 음식 식단 기록 응답 수신: 상태 코드 \(httpResponse.statusCode)")
+                if !(200...299).contains(httpResponse.statusCode) {
+                    DispatchQueue.main.async {
+                        self.showAlert(title: "오류", message: "서버 응답 오류: \(httpResponse.statusCode)")
+                    }
+                    return
+                }
             }
             
             // 응답 데이터 처리 (필요에 따라 추가)
             
             DispatchQueue.main.async {
-                // 메인 화면으로 돌아가기
-                self.navigationController?.popToRootViewController(animated: true)
+                // 성공 메시지 표시
+                self.showAlert(title: "성공", message: "식단이 성공적으로 기록되었습니다.") {
+                    // 메인 화면으로 돌아가기
+                    self.navigationController?.popToRootViewController(animated: true)
+                }
             }
         }.resume()
     }
@@ -670,12 +761,22 @@ class ResultViewController: UIViewController {
     }
     
     func getUserName() -> String {
-           if let userName = UserInfoManager.shared.name {
-               return userName
-           } else {
-               return "UnknownUser"
-           }
-       }
+        if let userName = UserInfoManager.shared.name {
+            return userName
+        } else {
+            return "UnknownUser"
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    func showAlert(title: String, message: String, completion: (() -> Void)? = nil) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "확인", style: .default, handler: { _ in
+            completion?()
+        }))
+        present(alertController, animated: true, completion: nil)
+    }
 }
 
 // MARK: - UITableViewDelegate, UITableViewDataSource
@@ -715,6 +816,8 @@ extension ResultViewController: UITableViewDelegate, UITableViewDataSource {
         }
     }
 }
+
+// MARK: - MultiFoodCell
 
 // 다중 음식 셀 클래스
 class MultiFoodCell: UITableViewCell {
@@ -788,7 +891,15 @@ class MultiFoodCell: UITableViewCell {
     }
 }
 
-// Data에 문자열을 추가하기 위한 확장
+struct FoodRecord: Codable {
+    let name: String
+    let intake_amount: Int
+    let date: String
+    let mealtime: String
+    let foodName: String
+}
+// MARK: - Data에 문자열을 추가하기 위한 확장
+
 extension Data {
     mutating func append(_ string: String) {
         if let data = string.data(using: .utf8) {
@@ -796,4 +907,3 @@ extension Data {
         }
     }
 }
-

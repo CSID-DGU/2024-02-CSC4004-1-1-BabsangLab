@@ -3,14 +3,14 @@ import Foundation
 
 // MARK: - Models
 
-// 공통 응답 모델을 제네릭으로 정의하여 재사용성을 높였습니다.
 struct ResponseDto<T: Codable>: Codable {
     let responseDto: T?
     let error: String?
     let success: Bool
 
+    // 서버의 응답과 일치하도록 CodingKeys 수정
     enum CodingKeys: String, CodingKey {
-        case responseDto = "ResponseDto"
+        case responseDto
         case error
         case success
     }
@@ -523,7 +523,7 @@ class MainViewController: UIViewController {
     }
 
     func constructURL() -> URL? {
-        let baseURL = "http://34.47.127.47:8080/record/date"
+        let baseURL = "http://34.64.172.57:8080/record/date"
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let todayDateString = dateFormatter.string(from: Date())
@@ -616,7 +616,7 @@ class MainViewController: UIViewController {
     }
 
     func constructAchievementRateURL() -> URL? {
-        let baseURL = "http://34.47.127.47:8080/record/rate"
+        let baseURL = "http://34.64.172.57:8080/record/rate"
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let todayDateString = dateFormatter.string(from: Date())
@@ -703,7 +703,7 @@ class MainViewController: UIViewController {
     }
 
     func constructRecommendationURL() -> URL? {
-        let baseURL = "http://34.47.127.47:8080/record/recommend"
+        let baseURL = "http://34.64.172.57:8080/record/recommend"
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let todayDateString = dateFormatter.string(from: Date())

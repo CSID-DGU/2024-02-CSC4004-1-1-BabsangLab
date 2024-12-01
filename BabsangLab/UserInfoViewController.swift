@@ -254,7 +254,7 @@ class UserInfoViewController: UIViewController {
         
         print("Request Body: \(requestBody)")
 
-        guard let url = URL(string: "http://34.47.127.47:8080/user/register") else { return }
+        guard let url = URL(string: "http://34.64.172.57:8080/user/register") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")

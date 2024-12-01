@@ -260,7 +260,7 @@ class EditUserInfoViewController: UIViewController {
             "weight_goal": weightGoal
         ]
 
-        guard let url = URL(string: "http://34.47.127.47:8080/user/update") else { return }
+        guard let url = URL(string: "http://http://34.64.172.57:8080/user/update") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
