@@ -1,20 +1,15 @@
 import UIKit
 
-class UserInfoViewController: UIViewController {
+class EditUserInfoViewController: UIViewController {
     let scrollView = UIScrollView()
     let contentView = UIStackView()
     let titleLabel = UILabel()
     let startButton = UIButton(type: .system)
-
+    
     var textFields: [UITextField] = []
     var errorLabels: [UILabel] = []
-    var weightGoalSegmentedControl: UISegmentedControl? // 추가된 부분
-
-    // SignupViewController에서 전달받는 데이터
-    var userId: String = ""
-    var password: String = ""
-
-    let keys = ["name", "age", "gender", "height", "weight", "med_history", "allergy"]
+    var 기타TextField: UITextField?
+    var checkBoxes: [UIButton] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,7 +19,7 @@ class UserInfoViewController: UIViewController {
         setupTitleLabel()
         setupFormFields()
         setupStartButton()
-
+        
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         view.addGestureRecognizer(tapGesture)
     }
@@ -83,20 +78,10 @@ class UserInfoViewController: UIViewController {
         addSection(title: "병력", placeholder: "병력 사항을 입력하세요")
         addSection(title: "알레르기", placeholder: "알레르기 정보를 입력하세요")
 
-        // 체중 관리 목표 추가
-        addWeightGoalSection()
+        // 체중 관리
+        addSegmentedControlSection(title: "체중 관리", items: ["감량", "유지", "증량"], defaultIndex: 1)
     }
 
-    func addWeightGoalSection() {
-        let weightGoalLabel = createTitleLabel(text: "체중 관리")
-        contentView.addArrangedSubview(weightGoalLabel)
-
-        weightGoalSegmentedControl = UISegmentedControl(items: ["감량", "유지", "증량"])
-        weightGoalSegmentedControl?.selectedSegmentIndex = 0
-        weightGoalSegmentedControl?.translatesAutoresizingMaskIntoConstraints = false
-        weightGoalSegmentedControl?.addTarget(self, action: #selector(validateForm), for: .valueChanged)
-        contentView.addArrangedSubview(weightGoalSegmentedControl!)
-    }
 
     func addSection(title: String, placeholder: String) {
         let label = createTitleLabel(text: title)
@@ -122,7 +107,7 @@ class UserInfoViewController: UIViewController {
     }
 
     func setupStartButton() {
-        startButton.setTitle("등록하기", for: .normal)
+        startButton.setTitle("수정하기", for: .normal)
         startButton.heightAnchor.constraint(equalToConstant: 44).isActive = true
         startButton.backgroundColor = UIColor.lightGray
         startButton.setTitleColor(UIColor.white, for: .normal)
@@ -141,6 +126,28 @@ class UserInfoViewController: UIViewController {
         return label
     }
 
+    func createCheckBox(title: String) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle("⬜️ \(title)", for: .normal)
+        button.setTitleColor(UIColor.black, for: .normal)
+        button.contentHorizontalAlignment = .left
+        button.addTarget(self, action: #selector(checkBoxTapped(_:)), for: .touchUpInside)
+        checkBoxes.append(button)
+        return button
+    }
+
+    func createCheckBoxWithTextField(goal: String) -> UIStackView {
+        let checkBox = createCheckBox(title: goal)
+        let textField = createTextField(placeholder: "기타를 입력하세요")
+        textField.isHidden = true
+        기타TextField = textField
+
+        let stackView = UIStackView(arrangedSubviews: [checkBox, textField])
+        stackView.axis = .vertical
+        stackView.spacing = 10
+        return stackView
+    }
+
     func createTitleLabel(text: String) -> UILabel {
         let label = UILabel()
         label.text = text
@@ -155,30 +162,47 @@ class UserInfoViewController: UIViewController {
         textField.placeholder = placeholder
         textField.font = UIFont.systemFont(ofSize: 16)
         textField.textColor = .black
-        textField.borderStyle = .none
+        textField.borderStyle = .none // 사각형 박스 제거
         textField.translatesAutoresizingMaskIntoConstraints = false
 
+        // 밑줄 추가
         let underline = UIView()
         underline.backgroundColor = .lightGray
         underline.translatesAutoresizingMaskIntoConstraints = false
         textField.addSubview(underline)
 
         NSLayoutConstraint.activate([
-            underline.heightAnchor.constraint(equalToConstant: 0.3),
+            underline.heightAnchor.constraint(equalToConstant: 0.3), // 밑줄 두께
             underline.leadingAnchor.constraint(equalTo: textField.leadingAnchor),
             underline.trailingAnchor.constraint(equalTo: textField.trailingAnchor),
-            underline.bottomAnchor.constraint(equalTo: textField.bottomAnchor, constant: 7)
+            underline.bottomAnchor.constraint(equalTo: textField.bottomAnchor, constant: 7) // 밑줄 위치
         ])
 
         textField.addTarget(self, action: #selector(validateForm), for: .editingChanged)
         return textField
     }
 
+    @objc func checkBoxTapped(_ sender: UIButton) {
+        if sender.title(for: .normal)?.contains("☑️") == true {
+            sender.setTitle(sender.title(for: .normal)?.replacingOccurrences(of: "☑️", with: "⬜️"), for: .normal)
+            if sender.title(for: .normal)?.contains("기타:") == true {
+                기타TextField?.isHidden = true
+                기타TextField?.text = ""
+            }
+        } else {
+            sender.setTitle(sender.title(for: .normal)?.replacingOccurrences(of: "⬜️", with: "☑️"), for: .normal)
+            if sender.title(for: .normal)?.contains("기타:") == true {
+                기타TextField?.isHidden = false
+            }
+        }
+        validateForm()
+    }
+
     @objc func validateForm() {
         var isValid = true
 
         for (index, textField) in textFields.enumerated() {
-            if textField.text?.isEmpty == true {
+            if textField.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true {
                 errorLabels[index].text = "이 필드를 입력해주세요."
                 errorLabels[index].isHidden = false
                 isValid = false
@@ -187,24 +211,20 @@ class UserInfoViewController: UIViewController {
             }
         }
 
+        if let genderSegmentedControl = contentView.arrangedSubviews.compactMap({ $0 as? UISegmentedControl }).first,
+           genderSegmentedControl.selectedSegmentIndex == UISegmentedControl.noSegment {
+            isValid = false
+        }
+
+        if let weightGoalSegmentedControl = contentView.arrangedSubviews.compactMap({ $0 as? UISegmentedControl }).last,
+           weightGoalSegmentedControl.selectedSegmentIndex == UISegmentedControl.noSegment {
+            isValid = false
+        }
+
         startButton.isEnabled = isValid
         startButton.backgroundColor = isValid ? .systemGreen : .lightGray
     }
-    
-    func navigateToMainScreen() {
-        DispatchQueue.main.async {
-            let mainTabBarController = MainTabBarController()
-            mainTabBarController.modalPresentationStyle = .fullScreen
-            self.present(mainTabBarController, animated: true, completion: nil)
-            
-        }
-    }
 
-    func showAlert(title: String, message: String) {
-        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alertController, animated: true)
-    }
 
     @objc func startButtonTapped() {
         // 성별 선택값 가져오기
@@ -212,7 +232,8 @@ class UserInfoViewController: UIViewController {
         let gender = (genderSegmentedControl?.selectedSegmentIndex == 0) ? "MALE" : "FEMALE"
 
         // 체중 목표 선택값 가져오기
-        var weightGoal = "MAINTAIN"
+        let weightGoalSegmentedControl = contentView.arrangedSubviews.compactMap { $0 as? UISegmentedControl }.last
+        var weightGoal = "maintain"
         if let selectedIndex = weightGoalSegmentedControl?.selectedSegmentIndex {
             switch selectedIndex {
             case 0:
@@ -226,64 +247,72 @@ class UserInfoViewController: UIViewController {
             }
         }
 
-        // 사용자 정보 저장
-        UserInfoManager.shared.userId = userId
-        UserInfoManager.shared.password = password
-        UserInfoManager.shared.name = textFields[0].text ?? ""
-        UserInfoManager.shared.age = Int(textFields[1].text ?? "") ?? 0
-        UserInfoManager.shared.gender = gender
-        UserInfoManager.shared.height = Double(textFields[2].text ?? "") ?? 0.0
-        UserInfoManager.shared.weight = Double(textFields[3].text ?? "") ?? 0.0
-        UserInfoManager.shared.medHistory = textFields[4].text ?? ""
-        UserInfoManager.shared.allergy = textFields[5].text ?? ""
-        UserInfoManager.shared.weightGoal = weightGoal // 추가된 부분
-
-        // 서버로 보낼 요청 바디 생성
-        let requestBody: [String: Any] = [
-            "userId": userId,
-            "password": password,
-            "name": UserInfoManager.shared.name ?? "",
-            "age": UserInfoManager.shared.age ?? 0,
-            "gender": UserInfoManager.shared.gender ?? "MALE",
-            "height": UserInfoManager.shared.height ?? 0.0,
-            "weight": UserInfoManager.shared.weight ?? 0.0,
-            "med_history": UserInfoManager.shared.medHistory ?? "",
-            "allergy": UserInfoManager.shared.allergy ?? "",
-            "weight_goal": UserInfoManager.shared.weightGoal ?? "maintain" // 추가된 부분
+        // 사용자 정보 생성
+        let updatedInfo: [String: Any] = [
+            "userId": UserInfoManager.shared.userId ?? "",
+            "password": UserInfoManager.shared.password ?? "",
+            "age": Int(textFields[1].text ?? "") ?? 0,
+            "gender": gender,
+            "height": Double(textFields[2].text ?? "") ?? 0.0,
+            "weight": Double(textFields[3].text ?? "") ?? 0.0,
+            "med_history": textFields[4].text ?? "",
+            "allergy": textFields[5].text ?? "",
+            "weight_goal": weightGoal
         ]
-        
-        print("Request Body: \(requestBody)")
 
-        guard let url = URL(string: "http://34.47.127.47:8080/user/register") else { return }
+        guard let url = URL(string: "http://34.47.127.47:8080/user/update") else { return }
         var request = URLRequest(url: url)
-        request.httpMethod = "POST"
+        request.httpMethod = "PUT"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: requestBody, options: [])
+            request.httpBody = try JSONSerialization.data(withJSONObject: updatedInfo, options: [])
         } catch {
-            print("Error serializing JSON: \(error)")
+            print("JSON Serialization Error: \(error.localizedDescription)")
             return
         }
 
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                print("Error: \(error.localizedDescription)")
+                print("Network Error: \(error.localizedDescription)")
                 return
             }
 
-            guard let data = data else { return }
-            print(String(data: data, encoding: .utf8) ?? "No response")
+            guard let data = data else {
+                print("No Response Data")
+                return
+            }
 
-            
-            self.navigateToMainScreen()
-            // 회원가입 성공 시 메인 화면으로 이동 등 추가 처리 가능
+            do {
+                if let responseJSON = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                   let success = responseJSON["success"] as? Bool, success {
+                    // 성공적으로 서버에 반영되었으므로 UserInfoManager 업데이트
+                    DispatchQueue.main.async {
+                        UserInfoManager.shared.age = updatedInfo["age"] as? Int
+                        UserInfoManager.shared.gender = updatedInfo["gender"] as? String
+                        UserInfoManager.shared.height = updatedInfo["height"] as? Double
+                        UserInfoManager.shared.weight = updatedInfo["weight"] as? Double
+                        UserInfoManager.shared.medHistory = updatedInfo["med_history"] as? String
+                        UserInfoManager.shared.allergy = updatedInfo["allergy"] as? String
+                        UserInfoManager.shared.weightGoal = updatedInfo["weight_goal"] as? String
 
+                        // 정보 수정 완료 후 이전 화면으로 돌아가기
+                                           self.navigationController?.popViewController(animated: true)
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                    }
+                }
+            } catch {
+            }
         }.resume()
     }
+
 }
+
 
 #Preview {
     UserInfoViewController()
 }
+
 

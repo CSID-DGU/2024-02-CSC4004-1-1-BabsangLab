@@ -46,7 +46,6 @@ class SignupViewController: UIViewController {
         return label
     }()
     
-    
     let passwordTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "비밀번호를 입력하세요"
@@ -61,7 +60,6 @@ class SignupViewController: UIViewController {
         return textField
     }()
     
-
     let confirmPasswordTextField: UITextField = {
         let textField = UITextField()
         textField.placeholder = "비밀번호 확인"
@@ -110,7 +108,6 @@ class SignupViewController: UIViewController {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         view.addGestureRecognizer(tapGesture)
         
-    
         view.addSubview(titleLabel)
         view.addSubview(idTextField)
         view.addSubview(checkIdButton)
@@ -126,11 +123,6 @@ class SignupViewController: UIViewController {
         setupConstraints()
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        navigationController?.setNavigationBarHidden(true, animated: true)
-    }
-    
     @objc func dismissKeyboard() {
         view.endEditing(true)
     }
@@ -144,19 +136,54 @@ class SignupViewController: UIViewController {
             return
         }
         
-        let dummyExistingIds = ["test1", "test2", "test3"]
-        if dummyExistingIds.contains(enteredId) {
-            duplicateCheckLabel.text = "이미 사용 중인 아이디입니다."
-            duplicateCheckLabel.textColor = UIColor.red
+        let urlString = "http://34.47.127.47:8080/user/register?userId=\(enteredId)"
+        guard let url = URL(string: urlString) else {
+            duplicateCheckLabel.text = "잘못된 URL입니다."
             duplicateCheckLabel.isHidden = false
-            isIdChecked = false
-        } else {
-            duplicateCheckLabel.text = "사용 가능한 아이디입니다."
-            duplicateCheckLabel.textColor = UIColor.green
-            duplicateCheckLabel.isHidden = false
-            isIdChecked = true
+            return
         }
-        validateForm()
+        
+        let task = URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    self.duplicateCheckLabel.text = "네트워크 오류: \(error.localizedDescription)"
+                    self.duplicateCheckLabel.textColor = .red
+                    self.duplicateCheckLabel.isHidden = false
+                    self.isIdChecked = false
+                    return
+                }
+                
+                guard let data = data else {
+                    self.duplicateCheckLabel.text = "데이터를 받지 못했습니다."
+                    self.duplicateCheckLabel.textColor = .red
+                    self.duplicateCheckLabel.isHidden = false
+                    self.isIdChecked = false
+                    return
+                }
+                
+                do {
+                    let response = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+                    if let success = response?["success"] as? Bool, success {
+                        self.duplicateCheckLabel.text = "사용 가능한 아이디입니다."
+                        self.duplicateCheckLabel.textColor = .green
+                        self.duplicateCheckLabel.isHidden = false
+                        self.isIdChecked = true
+                    } else {
+                        self.duplicateCheckLabel.text = "이미 사용 중인 아이디입니다."
+                        self.duplicateCheckLabel.textColor = .red
+                        self.duplicateCheckLabel.isHidden = false
+                        self.isIdChecked = false
+                    }
+                } catch {
+                    self.duplicateCheckLabel.text = "응답 처리 오류: \(error.localizedDescription)"
+                    self.duplicateCheckLabel.textColor = .red
+                    self.duplicateCheckLabel.isHidden = false
+                    self.isIdChecked = false
+                }
+                self.validateForm()
+            }
+        }
+        task.resume()
     }
     
     @objc func validateForm() {
@@ -168,6 +195,8 @@ class SignupViewController: UIViewController {
     
     @objc func navigateToUserInfoViewController() {
         let userInfoVC = UserInfoViewController()
+        userInfoVC.userId = idTextField.text ?? ""
+        userInfoVC.password = passwordTextField.text ?? ""
         navigationController?.pushViewController(userInfoVC, animated: true)
     }
     
@@ -212,7 +241,7 @@ class SignupViewController: UIViewController {
 }
 
 
+
 #Preview {
     SignupViewController()
 }
-
