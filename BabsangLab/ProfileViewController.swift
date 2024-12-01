@@ -9,18 +9,6 @@ class ProfileViewController: UIViewController {
     let nameLabel = UILabel()
     let editButton = UIButton(type: .system)
 
-    // 유저 정보 (임시 데이터)
-    var userInfo: [String: String] = [
-        "나이": "25",
-        "성별": "남성",
-        "키": "175cm",
-        "체중": "70kg",
-        "병력": "없음",
-        "알레르기": "없음",
-        "체중 관리": "유지",
-        "식단 목표": "건강 증진, 근력 강화"
-    ]
-
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
@@ -73,7 +61,7 @@ class ProfileViewController: UIViewController {
         profileImageView.clipsToBounds = true
         profileImageView.translatesAutoresizingMaskIntoConstraints = false
 
-        nameLabel.text = "홍길동" // 이름은 userInfo에 맞게 표시
+        nameLabel.text = UserInfoManager.shared.name ?? "사용자 이름"
         nameLabel.font = UIFont.boldSystemFont(ofSize: 24)
         nameLabel.textColor = .white
         nameLabel.textAlignment = .center
@@ -96,11 +84,47 @@ class ProfileViewController: UIViewController {
     }
 
     func setupUserInfoCards() {
+        // UserInfoManager의 데이터를 가져와 표시
+        let genderKorean: String = {
+            switch UserInfoManager.shared.gender {
+            case "MALE":
+                return "남성"
+            case "FEMALE":
+                return "여성"
+            default:
+                return "미입력"
+            }
+        }()
+
+        let weightGoalKorean: String = {
+            switch UserInfoManager.shared.weightGoal {
+            case "gain":
+                return "증량"
+            case "maintain":
+                return "유지"
+            case "lose":
+                return "감량"
+            default:
+                return "미입력"
+            }
+        }()
+
+        let userInfo = [
+            "나이": "\(UserInfoManager.shared.age ?? 0)세",
+            "성별": genderKorean,
+            "키": "\(UserInfoManager.shared.height ?? 0.0)cm",
+            "체중": "\(UserInfoManager.shared.weight ?? 0.0)kg",
+            "병력": UserInfoManager.shared.medHistory ?? "없음",
+            "알레르기": UserInfoManager.shared.allergy ?? "없음",
+            "체중 관리": weightGoalKorean // 체중 관리도 변환 후 표시
+        ]
+
         for (key, value) in userInfo {
             let cardView = createInfoCard(title: key, value: value)
             contentView.addArrangedSubview(cardView)
         }
     }
+
 
     func setupEditButton() {
         editButton.setTitle("정보 수정", for: .normal)

@@ -669,16 +669,13 @@ class ResultViewController: UIViewController {
         }
     }
     
-    // 사용자 이름 가져오기 함수 (회원가입 시 저장된 이름 사용)
     func getUserName() -> String {
-        // 예시로 UserDefaults에서 사용자 이름을 가져옵니다.
-        // 실제 앱에서는 적절한 방법으로 사용자 이름을 가져오세요.
-        if let userName = UserDefaults.standard.string(forKey: "userName") {
-            return userName
-        } else {
-            return "UnknownUser"
-        }
-    }
+           if let userName = UserInfoManager.shared.name {
+               return userName
+           } else {
+               return "UnknownUser"
+           }
+       }
 }
 
 // MARK: - UITableViewDelegate, UITableViewDataSource

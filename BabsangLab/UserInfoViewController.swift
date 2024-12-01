@@ -8,6 +8,7 @@ class UserInfoViewController: UIViewController {
 
     var textFields: [UITextField] = []
     var errorLabels: [UILabel] = []
+    var weightGoalSegmentedControl: UISegmentedControl? // 추가된 부분
 
     // SignupViewController에서 전달받는 데이터
     var userId: String = ""
@@ -81,6 +82,20 @@ class UserInfoViewController: UIViewController {
 
         addSection(title: "병력", placeholder: "병력 사항을 입력하세요")
         addSection(title: "알레르기", placeholder: "알레르기 정보를 입력하세요")
+
+        // 체중 관리 목표 추가
+        addWeightGoalSection()
+    }
+
+    func addWeightGoalSection() {
+        let weightGoalLabel = createTitleLabel(text: "체중 관리")
+        contentView.addArrangedSubview(weightGoalLabel)
+
+        weightGoalSegmentedControl = UISegmentedControl(items: ["감량", "유지", "증량"])
+        weightGoalSegmentedControl?.selectedSegmentIndex = 0
+        weightGoalSegmentedControl?.translatesAutoresizingMaskIntoConstraints = false
+        weightGoalSegmentedControl?.addTarget(self, action: #selector(validateForm), for: .valueChanged)
+        contentView.addArrangedSubview(weightGoalSegmentedControl!)
     }
 
     func addSection(title: String, placeholder: String) {
@@ -175,20 +190,69 @@ class UserInfoViewController: UIViewController {
         startButton.isEnabled = isValid
         startButton.backgroundColor = isValid ? .systemGreen : .lightGray
     }
+    
+    func navigateToMainScreen() {
+        DispatchQueue.main.async {
+            let mainTabBarController = MainTabBarController()
+            mainTabBarController.modalPresentationStyle = .fullScreen
+            self.present(mainTabBarController, animated: true, completion: nil)
+            
+        }
+    }
+
+    func showAlert(title: String, message: String) {
+        let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alertController.addAction(UIAlertAction(title: "확인", style: .default))
+        present(alertController, animated: true)
+    }
 
     @objc func startButtonTapped() {
-        // 명세서에 따라 순서대로 requestBody를 생성합니다.
-        var requestBody: [String: Any] = [
+        // 성별 선택값 가져오기
+        let genderSegmentedControl = contentView.arrangedSubviews.compactMap { $0 as? UISegmentedControl }.first
+        let gender = (genderSegmentedControl?.selectedSegmentIndex == 0) ? "MALE" : "FEMALE"
+
+        // 체중 목표 선택값 가져오기
+        var weightGoal = "MAINTAIN"
+        if let selectedIndex = weightGoalSegmentedControl?.selectedSegmentIndex {
+            switch selectedIndex {
+            case 0:
+                weightGoal = "lose" // 감량
+            case 1:
+                weightGoal = "maintain" // 유지
+            case 2:
+                weightGoal = "gain" // 증량
+            default:
+                weightGoal = "maintain"
+            }
+        }
+
+        // 사용자 정보 저장
+        UserInfoManager.shared.userId = userId
+        UserInfoManager.shared.password = password
+        UserInfoManager.shared.name = textFields[0].text ?? ""
+        UserInfoManager.shared.age = Int(textFields[1].text ?? "") ?? 0
+        UserInfoManager.shared.gender = gender
+        UserInfoManager.shared.height = Double(textFields[2].text ?? "") ?? 0.0
+        UserInfoManager.shared.weight = Double(textFields[3].text ?? "") ?? 0.0
+        UserInfoManager.shared.medHistory = textFields[4].text ?? ""
+        UserInfoManager.shared.allergy = textFields[5].text ?? ""
+        UserInfoManager.shared.weightGoal = weightGoal // 추가된 부분
+
+        // 서버로 보낼 요청 바디 생성
+        let requestBody: [String: Any] = [
             "userId": userId,
             "password": password,
-            "name": textFields[0].text ?? "",
-            "age": Int(textFields[1].text ?? "") ?? 0,
-            "gender": (contentView.arrangedSubviews.compactMap { $0 as? UISegmentedControl }.first?.selectedSegmentIndex == 0) ? "MALE" : "FEMALE",
-            "height": Double(textFields[2].text ?? "") ?? 0.0,
-            "weight": Double(textFields[3].text ?? "") ?? 0.0,
-            "med_history": textFields[4].text ?? "",
-            "allergy": textFields[5].text ?? ""
+            "name": UserInfoManager.shared.name ?? "",
+            "age": UserInfoManager.shared.age ?? 0,
+            "gender": UserInfoManager.shared.gender ?? "MALE",
+            "height": UserInfoManager.shared.height ?? 0.0,
+            "weight": UserInfoManager.shared.weight ?? 0.0,
+            "med_history": UserInfoManager.shared.medHistory ?? "",
+            "allergy": UserInfoManager.shared.allergy ?? "",
+            "weight_goal": UserInfoManager.shared.weightGoal ?? "maintain" // 추가된 부분
         ]
+        
+        print("Request Body: \(requestBody)")
 
         guard let url = URL(string: "http://34.47.127.47:8080/user/register") else { return }
         var request = URLRequest(url: url)
@@ -210,6 +274,11 @@ class UserInfoViewController: UIViewController {
 
             guard let data = data else { return }
             print(String(data: data, encoding: .utf8) ?? "No response")
+
+            
+            self.navigateToMainScreen()
+            // 회원가입 성공 시 메인 화면으로 이동 등 추가 처리 가능
+
         }.resume()
     }
 }

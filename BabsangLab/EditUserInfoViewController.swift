@@ -71,7 +71,7 @@ class EditUserInfoViewController: UIViewController {
 
         // 성별 선택
         addSegmentedControlSection(title: "성별", items: ["남성", "여성"], defaultIndex: 0)
-        
+
         addSection(title: "키", placeholder: "키를 입력하세요 (예: 170)")
         addSection(title: "체중", placeholder: "체중을 입력하세요 (예: 70)")
 
@@ -80,22 +80,8 @@ class EditUserInfoViewController: UIViewController {
 
         // 체중 관리
         addSegmentedControlSection(title: "체중 관리", items: ["감량", "유지", "증량"], defaultIndex: 1)
-
-        // 식단 목표
-        let dietGoalsLabel = createTitleLabel(text: "식단 관리 목표")
-        contentView.addArrangedSubview(dietGoalsLabel)
-
-        let goals = ["체중 조절", "건강 증진", "근력 강화", "알레르기 예방", "개인 건강 문제(질병 등)", "기타:"]
-        for goal in goals {
-            if goal == "기타:" {
-                let 기타StackView = createCheckBoxWithTextField(goal: goal)
-                contentView.addArrangedSubview(기타StackView)
-            } else {
-                let checkBox = createCheckBox(title: goal)
-                contentView.addArrangedSubview(checkBox)
-            }
-        }
     }
+
 
     func addSection(title: String, placeholder: String) {
         let label = createTitleLabel(text: title)
@@ -216,7 +202,7 @@ class EditUserInfoViewController: UIViewController {
         var isValid = true
 
         for (index, textField) in textFields.enumerated() {
-            if textField.text?.isEmpty == true {
+            if textField.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true {
                 errorLabels[index].text = "이 필드를 입력해주세요."
                 errorLabels[index].isHidden = false
                 isValid = false
@@ -225,21 +211,103 @@ class EditUserInfoViewController: UIViewController {
             }
         }
 
-        if 기타TextField?.isHidden == false && 기타TextField?.text?.isEmpty == true {
+        if let genderSegmentedControl = contentView.arrangedSubviews.compactMap({ $0 as? UISegmentedControl }).first,
+           genderSegmentedControl.selectedSegmentIndex == UISegmentedControl.noSegment {
             isValid = false
         }
 
-        let isAnyCheckBoxSelected = checkBoxes.contains { $0.title(for: .normal)?.contains("☑️") == true }
-        isValid = isValid && isAnyCheckBoxSelected
+        if let weightGoalSegmentedControl = contentView.arrangedSubviews.compactMap({ $0 as? UISegmentedControl }).last,
+           weightGoalSegmentedControl.selectedSegmentIndex == UISegmentedControl.noSegment {
+            isValid = false
+        }
 
         startButton.isEnabled = isValid
         startButton.backgroundColor = isValid ? .systemGreen : .lightGray
     }
 
+
     @objc func startButtonTapped() {
-        // 시작 버튼 로직
-        print("정보 입력 완료")
+        // 성별 선택값 가져오기
+        let genderSegmentedControl = contentView.arrangedSubviews.compactMap { $0 as? UISegmentedControl }.first
+        let gender = (genderSegmentedControl?.selectedSegmentIndex == 0) ? "MALE" : "FEMALE"
+
+        // 체중 목표 선택값 가져오기
+        let weightGoalSegmentedControl = contentView.arrangedSubviews.compactMap { $0 as? UISegmentedControl }.last
+        var weightGoal = "maintain"
+        if let selectedIndex = weightGoalSegmentedControl?.selectedSegmentIndex {
+            switch selectedIndex {
+            case 0:
+                weightGoal = "lose" // 감량
+            case 1:
+                weightGoal = "maintain" // 유지
+            case 2:
+                weightGoal = "gain" // 증량
+            default:
+                weightGoal = "maintain"
+            }
+        }
+
+        // 사용자 정보 생성
+        let updatedInfo: [String: Any] = [
+            "userId": UserInfoManager.shared.userId ?? "",
+            "password": UserInfoManager.shared.password ?? "",
+            "age": Int(textFields[1].text ?? "") ?? 0,
+            "gender": gender,
+            "height": Double(textFields[2].text ?? "") ?? 0.0,
+            "weight": Double(textFields[3].text ?? "") ?? 0.0,
+            "med_history": textFields[4].text ?? "",
+            "allergy": textFields[5].text ?? "",
+            "weight_goal": weightGoal
+        ]
+
+        guard let url = URL(string: "http://34.47.127.47:8080/user/update") else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: updatedInfo, options: [])
+        } catch {
+            print("JSON Serialization Error: \(error.localizedDescription)")
+            return
+        }
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Network Error: \(error.localizedDescription)")
+                return
+            }
+
+            guard let data = data else {
+                print("No Response Data")
+                return
+            }
+
+            do {
+                if let responseJSON = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+                   let success = responseJSON["success"] as? Bool, success {
+                    // 성공적으로 서버에 반영되었으므로 UserInfoManager 업데이트
+                    DispatchQueue.main.async {
+                        UserInfoManager.shared.age = updatedInfo["age"] as? Int
+                        UserInfoManager.shared.gender = updatedInfo["gender"] as? String
+                        UserInfoManager.shared.height = updatedInfo["height"] as? Double
+                        UserInfoManager.shared.weight = updatedInfo["weight"] as? Double
+                        UserInfoManager.shared.medHistory = updatedInfo["med_history"] as? String
+                        UserInfoManager.shared.allergy = updatedInfo["allergy"] as? String
+                        UserInfoManager.shared.weightGoal = updatedInfo["weight_goal"] as? String
+
+                        // 정보 수정 완료 후 이전 화면으로 돌아가기
+                                           self.navigationController?.popViewController(animated: true)
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                    }
+                }
+            } catch {
+            }
+        }.resume()
     }
+
 }
 
 
