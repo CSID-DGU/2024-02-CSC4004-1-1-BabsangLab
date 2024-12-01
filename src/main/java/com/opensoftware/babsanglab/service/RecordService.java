@@ -49,16 +49,7 @@ public class RecordService {
                 .toList();
     }
 
-    public Object rateDay(String userName, LocalDate date) {
-        User user = userRepository.findByName(userName)
-                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
-        if (user.getWeight() == null) {
-            return NotifyResponseDto.builder()
-                    .message("몸무게 정보가 없습니다. 정보를 업데이트 하세요.")
-                    .build();
-        }
-        Map<String,Double> recommendValues = getRecommend(user.getWeight_goal(), user.getWeight());
-
+    Map<String, Double> totalIntake(User user, LocalDate date) { // 섭취량 조회
         List<Record> records = recordRepository.findByUserAndDate(user, date);
         double totalCalories = 0.0;
         double totalProtein = 0.0;
@@ -77,12 +68,29 @@ public class RecordService {
             totalCarbs += food.getCarbs() * intakeAmount;
         }
 
+        Map<String, Double> totalIntakes = new HashMap<>();
+        totalIntakes.put("calories", totalCalories);
+        totalIntakes.put("protein", totalProtein);
+        totalIntakes.put("fat",totalFat);
+        totalIntakes.put("carbs",totalCarbs);
+        return totalIntakes;
+    }
+    public Object rateDay(String userName, LocalDate date) { // 달성률 조회
+        User user = userRepository.findByName(userName)
+                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+        if (user.getWeight() == null) {
+            return NotifyResponseDto.builder()
+                    .message("몸무게 정보가 없습니다. 정보를 업데이트 하세요.")
+                    .build();
+        }
+        Map<String,Double> recommendValues = getRecommend(user.getWeight_goal(), user.getWeight());
+        Map<String,Double> totalIntakes = totalIntake(user,date);
 
         return RateResponseDto.builder()
-                .rateCalories(totalCalories/ recommendValues.get("calories"))
-                .rateProtein(totalProtein/ recommendValues.get("protein"))
-                .rateFat(totalFat/ recommendValues.get("fat"))
-                .rateCarbs(totalCarbs/ recommendValues.get("carbs"))
+                .rateCalories(totalIntakes.get("calories")/ recommendValues.get("calories"))
+                .rateProtein(totalIntakes.get("protein")/ recommendValues.get("protein"))
+                .rateFat(totalIntakes.get("fat")/ recommendValues.get("fat"))
+                .rateCarbs(totalIntakes.get("carbs")/ recommendValues.get("carbs"))
                 .build();
     }
 
@@ -109,13 +117,19 @@ public class RecordService {
 
         return recommendValues;
     }
-    public List<AnalysisResponseDto> recommendFood(String userName, LocalDate date) {
+    public List<AnalysisResponseDto> recommendFood(String userName, LocalDate date) { // 추천음식 조회
         User user = userRepository.findByName(userName)
                 .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
         Map<String,Double> recommendValues = getRecommend(user.getWeight_goal(), user.getWeight());
+        Map<String,Double> totalIntakes = totalIntake(user,date);
+
         List<Food> foods = analysisRepository.findByRecommend(
-                recommendValues.get("calories"),recommendValues.get("protein"),recommendValues.get("fat"),recommendValues.get("carbs")
-                ,user.getAllergy(),user.getMed_history()
+                recommendValues.get("calories")-totalIntakes.get("calories"),
+                recommendValues.get("protein")- totalIntakes.get("protein"),
+                recommendValues.get("fat")- totalIntakes.get("fat"),
+                recommendValues.get("carbs")- totalIntakes.get("carbs"),
+                user.getAllergy(),
+                user.getMed_history()
         );
         return foods.stream()
                 .map(food -> {
