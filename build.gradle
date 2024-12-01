@@ -1,3 +1,5 @@
+import java.text.SimpleDateFormat
+
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.4.0'
@@ -8,11 +10,16 @@ jar {
 	enabled = false
 }
 
-group = 'com.opensoftware'
-version = '0.0.1-SNAPSHOT'
+//group = 'com.opensoftware'
+//version = '0.0.1-SNAPSHOT'
 // bootJar 태스크에서 파일 이름 설정
 bootJar {
-	archiveFileName = "babsanglab-${version}-${System.currentTimeMillis()}.jar"
+	// 현재 날짜와 시간을 포맷팅
+	def dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss")
+	def currentTime = dateFormat.format(new Date())
+
+	// JAR 파일 이름 설정
+	archiveFileName = "babsanglab-${currentTime}.jar"
 }
 
 
