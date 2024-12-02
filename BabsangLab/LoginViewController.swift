@@ -107,7 +107,7 @@ class LoginViewController: UIViewController {
             return
         }
 
-        let urlString = "http://34.47.127.47:8080/user/login"
+        let urlString = "http://34.64.172.57:8080/user/login"
         guard let url = URL(string: urlString) else {
             showAlert(title: "오류", message: "잘못된 URL입니다.")
             return

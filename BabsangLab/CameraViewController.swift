@@ -29,7 +29,7 @@ class CameraViewController: UIViewController, UIImagePickerControllerDelegate, U
             if let image = info[.originalImage] as? UIImage {
                 let resultVC = ResultViewController()
                 resultVC.selectedImage = image
-                resultVC.selectedFoodType = self.selectedFoodType
+                resultVC.selectedFoodType = self.selectedFoodType!
 
                 // 네비게이션 스택에서 CameraViewController를 제거
                 if let navigationControllers = self.navigationController?.viewControllers {

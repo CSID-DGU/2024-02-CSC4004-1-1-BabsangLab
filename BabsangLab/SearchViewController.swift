@@ -2,30 +2,56 @@ import UIKit
 
 // MARK: - Models
 
-struct RecordRequest: Codable {
+struct SingleRecordRequest: Codable {
     let name: String
     let foodName: String
     let date: String
     let mealtime: String
-    let intake_amount: [Int]
+    let intake_amount: Int
 }
 
 struct AnalysisDto: Codable {
+    let foodName: String
     let calories: Double
     let fat: Double
     let protein: Double
     let carbs: Double
     let allergy: String?
+    let medical_issue: String?
 }
 
+// MARK: - UIButton Extension for Gradient
 
-
-struct AnalysisResponse: Codable {
-    let analysisDtoList: [AnalysisDto]?
-
-    enum CodingKeys: String, CodingKey {
-        case analysisDtoList = "AnalysisDtoList"
+extension UIButton {
+    func applyGradient(colors: [UIColor], cornerRadius: CGFloat = 10) {
+        // 기존의 그라데이션 레이어 제거
+        self.layer.sublayers?.filter { $0.name == "gradientLayer" }.forEach { $0.removeFromSuperlayer() }
+        
+        // 그라데이션 레이어 생성
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.name = "gradientLayer"
+        gradientLayer.colors = colors.map { $0.cgColor }
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0.5) // 좌측 중앙
+        gradientLayer.endPoint = CGPoint(x: 1, y: 0.5)   // 우측 중앙
+        gradientLayer.frame = self.bounds
+        gradientLayer.cornerRadius = cornerRadius
+        
+        // 레이어에 그림자 추가
+        self.layer.shadowColor = UIColor.black.cgColor
+        self.layer.shadowOpacity = 0.25
+        self.layer.shadowOffset = CGSize(width: 0, height: 4)
+        self.layer.shadowRadius = 4
+        self.layer.masksToBounds = false
+        
+        // 버튼의 레이어에 그라데이션 추가
+        self.layer.insertSublayer(gradientLayer, at: 0)
     }
+    
+    func updateGradientFrame() {
+            if let gradientLayer = self.layer.sublayers?.first(where: { $0.name == "gradientLayer" }) as? CAGradientLayer {
+                gradientLayer.frame = self.bounds
+            }
+        }
 }
 
 // MARK: - SearchViewController
@@ -40,21 +66,7 @@ class SearchViewController: UIViewController {
     let saveButton = UIButton()
 
     // 데이터
-    let foodDatabase = [
-        "가지볶음", "간장게장", "갈비구이", "갈비찜", "갈비탕", "갈치구이", "갈치조림", "감자전", "감자조림", "감자채볶음", "감자탕", "갓김치", "건새우볶음", "경단",
-        "계란국", "계란말이", "계란찜", "계란후라이", "고등어구이", "고등어조림", "고사리나물", "고추장진미채볶음", "고추튀김", "곰탕_설렁탕",
-        "곱창구이", "곱창전골", "과메기", "김밥", "김치볶음밥", "김치전", "김치찌개", "김치찜", "깍두기", "깻잎장아찌", "꼬막찜", "꽁치조림", "꽈리고추무침",
-        "꿀떡", "나박김치", "누룽지", "닭갈비", "닭계장", "닭볶음탕", "더덕구이", "도라지무침", "도토리묵", "동그랑땡", "동태찌개", "된장찌개", "두부김치",
-        "두부조림", "땅콩조림", "떡갈비", "떡국_만두국", "떡꼬치", "떡볶이", "라면", "라볶이", "막국수", "만두", "매운탕", "멍게", "메추리알장조림",
-        "멸치볶음", "무국", "무생채", "물냉면", "물회", "미역국", "미역줄기볶음", "배추김치", "백김치", "보쌈", "부추김치", "북엇국", "불고기", "비빔냉면",
-        "비빔밥", "산낙지", "삼겹살", "삼계탕", "새우볶음밥", "새우튀김", "생선전", "소세지볶음", "송편", "수육", "수정과", "수제비", "숙주나물", "순대",
-        "순두부찌개", "시금치나물", "시래기국", "식혜", "알밥", "애호박볶음", "약과", "약식", "양념게장", "양념치킨", "어묵볶음", "연근조림",
-        "열무국수", "열무김치", "오이소박이", "오징어채볶음", "오징어튀김", "우엉조림", "유부초밥", "육개장", "육회", "잔치국수", "잡곡밥", "잡채",
-        "장어구이", "장조림", "전복죽", "젓갈", "제육볶음", "조개구이", "조기구이", "족발", "쭈꾸미볶음", "주먹밥", "짜장면", "짬뽕", "쫄면", "찜닭",
-        "총각김치", "추어탕", "칼국수", "코다리조림", "콩국수", "콩나물국", "콩나물무침", "콩자반", "파김치", "파전", "편육", "피자", "한과", "해물찜",
-        "호박전", "호박죽", "홍어무침", "황태구이", "회무침", "후라이드치킨", "훈제오리"
-    ]
-
+    let foodDatabase = [ "가지볶음", "간장게장", "갈비구이", "갈비찜", "갈비탕", "갈치구이", "갈치조림", "감자전", "감자조림", "감자채볶음", "감자탕", "갓김치", "건새우볶음", "경단", "계란국", "계란말이", "계란찜", "계란후라이", "고등어구이", "고등어조림", "고사리나물", "고추장진미채볶음", "고추튀김", "곰탕_설렁탕", "곱창구이", "곱창전골", "과메기", "김밥", "김치볶음밥", "김치전", "김치찌개", "김치찜", "깍두기", "깻잎장아찌", "꼬막찜", "꽁치조림", "꽈리고추무침", "꿀떡", "나박김치", "누룽지", "닭갈비", "닭계장", "닭볶음탕", "더덕구이", "도라지무침", "도토리묵", "동그랑땡", "동태찌개", "된장찌개", "두부김치", "두부조림", "땅콩조림", "떡갈비", "떡국_만두국", "떡꼬치", "떡볶이", "라면", "라볶이", "막국수", "만두", "매운탕", "멍게", "메추리알장조림", "멸치볶음", "무국", "무생채", "물냉면", "물회", "미역국", "미역줄기볶음", "배추김치", "백김치", "보쌈", "부추김치", "북엇국", "불고기", "비빔냉면", "비빔밥", "산낙지", "삼겹살", "삼계탕", "새우볶음밥", "새우튀김", "생선전", "소세지볶음", "송편", "수육", "수정과", "수제비", "숙주나물", "순대", "순두부찌개", "시금치나물", "시래기국", "식혜", "알밥", "애호박볶음", "약과", "약식", "양념게장", "양념치킨", "어묵볶음", "연근조림", "열무국수", "열무김치", "오이소박이", "오징어채볶음", "오징어튀김", "우엉조림", "유부초밥", "육개장", "육회", "잔치국수", "잡곡밥", "잡채", "장어구이", "장조림", "전복죽", "젓갈", "제육볶음", "조개구이", "조기구이", "족발", "쭈꾸미볶음", "주먹밥", "짜장면", "짬뽕", "쫄면", "찜닭", "총각김치", "추어탕", "칼국수", "코다리조림", "콩국수", "콩나물국", "콩나물무침", "콩자반", "파김치", "파전", "편육", "피자", "한과", "해물찜", "호박전", "호박죽", "홍어무침", "황태구이", "회무침", "후라이드치킨", "훈제오리" ]
 
     var filteredFoods: [String] = []
     var selectedFoods: [String: Int] = [:]
@@ -70,6 +82,17 @@ class SearchViewController: UIViewController {
         setupGestureToDismissKeyboard()
 
         filteredFoods = foodDatabase
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        // 그라데이션 레이어의 프레임을 버튼의 현재 프레임에 맞게 조정
+        saveButton.layer.sublayers?.forEach { layer in
+            if layer.name == "gradientLayer" {
+                layer.frame = saveButton.bounds
+            }
+        }
     }
 
     // MARK: - UI 설정
@@ -134,18 +157,25 @@ class SearchViewController: UIViewController {
 
     func setupSaveButton() {
         saveButton.setTitle("식단 기록하기", for: .normal)
-        saveButton.backgroundColor = .systemGreen
         saveButton.setTitleColor(.white, for: .normal)
+        saveButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18) // 글꼴을 굵게 하고 크기 조정
         saveButton.layer.cornerRadius = 10
         saveButton.translatesAutoresizingMaskIntoConstraints = false
+        saveButton.clipsToBounds = true
         view.addSubview(saveButton)
 
         NSLayoutConstraint.activate([
-            saveButton.topAnchor.constraint(equalTo: selectedFoodsScrollView.bottomAnchor, constant: 16),
+            saveButton.topAnchor.constraint(equalTo: selectedFoodsScrollView.bottomAnchor, constant: 5),
             saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            saveButton.widthAnchor.constraint(equalToConstant: 200),
-            saveButton.heightAnchor.constraint(equalToConstant: 30)
+            saveButton.widthAnchor.constraint(equalToConstant: 220), // 버튼 너비 약간 확대
+            saveButton.heightAnchor.constraint(equalToConstant: 40)  // 버튼 높이 약간 확대
         ])
+
+        // 그라데이션 적용 (버튼의 프레임이 설정된 후에 적용해야 정확한 크기로 그라데이션을 그릴 수 있습니다.)
+        saveButton.applyGradient(colors: [UIColor.systemGreen, UIColor.systemBlue], cornerRadius: 10)
+
+        // 그림자 추가는 UIButton Extension에서 이미 처리
+        // 필요한 경우 추가 설정 가능
 
         saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
     }
@@ -239,33 +269,43 @@ class SearchViewController: UIViewController {
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let todayDateString = dateFormatter.string(from: Date())
 
-        // mealtime을 선택하도록 추가 (예: 'breakfast', 'lunch', 'dinner')
-        let mealtime = "lunch" // 필요에 따라 변경하거나 사용자에게 선택받을 수 있음
+        // mealtime을 현재 시간에 따라 결정
+        let mealtime = getCurrentMealtime()
 
-        // foodName과 intake_amount 배열 생성
-        let foodNames = Array(selectedFoods.keys)
-        let intakeAmounts = Array(selectedFoods.values)
+        // 음식 개수에 따라 다른 API로 전송
+        if selectedFoods.count == 1, let food = selectedFoods.keys.first, let intakeAmount = selectedFoods[food] {
+            // 단일 음식 기록
+            let singleRecordRequest = SingleRecordRequest(
+                name: userName,
+                foodName: food,
+                date: todayDateString,
+                mealtime: mealtime,
+                intake_amount: intakeAmount
+            )
+            sendSingleRecordToServer(request: singleRecordRequest)
+        } else {
+            // 다중 음식 기록
+            var records: [SingleRecordRequest] = []
+            for (foodName, intakeAmount) in selectedFoods {
+                let record = SingleRecordRequest(
+                    name: userName,
+                    foodName: foodName,
+                    date: todayDateString,
+                    mealtime: mealtime,
+                    intake_amount: intakeAmount
+                )
+                records.append(record)
+            }
 
-        // foodName을 쉼표로 구분된 문자열로 변환
-        let foodNameString = foodNames.joined(separator: ",")
-
-        // RecordRequest 생성
-        let recordRequest = RecordRequest(
-            name: userName,
-            foodName: foodNameString,
-            date: todayDateString,
-            mealtime: mealtime,
-            intake_amount: intakeAmounts
-        )
-
-        // 서버로 전송
-        sendRecordToServer(request: recordRequest)
+            sendMultipleRecordsToServer(records: records)
+        }
     }
 
     // MARK: - Networking
 
-    func sendRecordToServer(request: RecordRequest) {
-        guard let url = URL(string: "http://34.47.127.47:8080/analysis/foods/record") else {
+    /// 단일 음식 기록을 서버로 전송하는 함수
+    func sendSingleRecordToServer(request: SingleRecordRequest) {
+        guard let url = URL(string: "http://34.64.172.57:8080/analysis/record") else {
             showAlert(title: "URL 오류", message: "유효한 URL을 생성할 수 없습니다.")
             return
         }
@@ -278,8 +318,14 @@ class SearchViewController: UIViewController {
             let encoder = JSONEncoder()
             let jsonData = try encoder.encode(request)
             urlRequest.httpBody = jsonData
+
+            // 요청 데이터 로그 출력
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                print("Single Record Request JSON: \(jsonString)")
+            }
         } catch {
             showAlert(title: "인코딩 오류", message: "요청 데이터를 인코딩하는 중 오류가 발생했습니다.")
+            print("❌ JSON 인코딩 오류: \(error.localizedDescription)")
             return
         }
 
@@ -289,11 +335,13 @@ class SearchViewController: UIViewController {
                 DispatchQueue.main.async {
                     self.showAlert(title: "네트워크 오류", message: error.localizedDescription)
                 }
+                print("❌ 네트워크 오류: \(error.localizedDescription)")
                 return
             }
 
             // 응답 상태 코드 확인
             if let httpResponse = response as? HTTPURLResponse {
+                print("📥 단일 음식 식단 기록 응답 수신: 상태 코드 \(httpResponse.statusCode)")
                 if !(200...299).contains(httpResponse.statusCode) {
                     DispatchQueue.main.async {
                         self.showAlert(title: "서버 오류", message: "서버 응답 상태 코드: \(httpResponse.statusCode)")
@@ -307,30 +355,132 @@ class SearchViewController: UIViewController {
                 DispatchQueue.main.async {
                     self.showAlert(title: "데이터 오류", message: "서버로부터 데이터가 수신되지 않았습니다.")
                 }
+                print("❌ 데이터 오류: 서버로부터 데이터가 수신되지 않았습니다.")
                 return
+            }
+
+            // 응답 데이터 로그 출력
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("Single Record Response JSON: \(responseString)")
             }
 
             // JSON 파싱
             do {
                 let decoder = JSONDecoder()
-                let responseDto = try decoder.decode(ResponseDto<AnalysisResponse>.self, from: data)
+                let responseDto = try decoder.decode(ResponseDto<AnalysisDto>.self, from: data)
 
-                if responseDto.success, let analysisList = responseDto.responseDto?.analysisDtoList {
+                if responseDto.success, let analysis = responseDto.responseDto {
                     DispatchQueue.main.async {
-                        self.showAlert(title: "성공", message: "식단이 성공적으로 기록되었습니다.")
+                        self.showAlert(title: "성공", message: "식단이 성공적으로 기록되었습니다.", completion: {
+                            // 메인 화면으로 돌아가기
+                            self.navigationController?.popToRootViewController(animated: true)
+                        })
                         self.clearSelectedFoods()
-                        // 필요시 MainViewController에 데이터 갱신을 요청할 수 있음
                     }
                 } else {
                     let errorMessage = responseDto.error ?? "알 수 없는 오류가 발생했습니다."
                     DispatchQueue.main.async {
                         self.showAlert(title: "오류", message: errorMessage)
                     }
+                    print("❌ 서버 오류: \(errorMessage)")
                 }
             } catch {
                 DispatchQueue.main.async {
                     self.showAlert(title: "파싱 오류", message: "서버 응답 데이터를 파싱하는 중 오류가 발생했습니다.")
                 }
+                print("❌ JSON 파싱 오류: \(error.localizedDescription)")
+            }
+        }
+
+        task.resume()
+    }
+
+    /// 다중 음식 기록을 서버로 전송하는 함수
+    func sendMultipleRecordsToServer(records: [SingleRecordRequest]) {
+        guard let url = URL(string: "http://34.64.172.57:8080/analysis/foods/record") else {
+            showAlert(title: "URL 오류", message: "유효한 URL을 생성할 수 없습니다.")
+            return
+        }
+
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        do {
+            let encoder = JSONEncoder()
+            let jsonData = try encoder.encode(records)
+            urlRequest.httpBody = jsonData
+
+            // 요청 데이터 로그 출력
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                print("📤 다중 음식 식단 기록 요청 JSON: \(jsonString)")
+            }
+        } catch {
+            showAlert(title: "인코딩 오류", message: "요청 데이터를 인코딩하는 중 오류가 발생했습니다.")
+            print("❌ JSON 인코딩 오류: \(error.localizedDescription)")
+            return
+        }
+
+        let task = URLSession.shared.dataTask(with: urlRequest) { data, response, error in
+            // 에러 처리
+            if let error = error {
+                DispatchQueue.main.async {
+                    self.showAlert(title: "네트워크 오류", message: error.localizedDescription)
+                }
+                print("❌ 네트워크 오류: \(error.localizedDescription)")
+                return
+            }
+
+            // 응답 상태 코드 확인
+            if let httpResponse = response as? HTTPURLResponse {
+                print("📥 다중 음식 식단 기록 응답 수신: 상태 코드 \(httpResponse.statusCode)")
+                if !(200...299).contains(httpResponse.statusCode) {
+                    DispatchQueue.main.async {
+                        self.showAlert(title: "서버 오류", message: "서버 응답 상태 코드: \(httpResponse.statusCode)")
+                    }
+                    return
+                }
+            }
+
+            // 데이터 존재 여부 확인
+            guard let data = data else {
+                DispatchQueue.main.async {
+                    self.showAlert(title: "데이터 오류", message: "서버로부터 데이터가 수신되지 않았습니다.")
+                }
+                print("❌ 데이터 오류: 서버로부터 데이터가 수신되지 않았습니다.")
+                return
+            }
+
+            // 응답 데이터 로그 출력
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("📄 다중 음식 식단 기록 응답 JSON: \(responseString)")
+            }
+
+            // JSON 파싱
+            do {
+                let decoder = JSONDecoder()
+                let responseDto = try decoder.decode(ResponseDto<[AnalysisDto]>.self, from: data)
+
+                if responseDto.success, let analysisList = responseDto.responseDto {
+                    DispatchQueue.main.async {
+                        self.showAlert(title: "성공", message: "식단이 성공적으로 기록되었습니다.", completion: {
+                            // 메인 화면으로 돌아가기
+                            self.navigationController?.popToRootViewController(animated: true)
+                        })
+                        self.clearSelectedFoods()
+                    }
+                } else {
+                    let errorMessage = responseDto.error ?? "알 수 없는 오류가 발생했습니다."
+                    DispatchQueue.main.async {
+                        self.showAlert(title: "오류", message: errorMessage)
+                    }
+                    print("❌ 서버 오류: \(errorMessage)")
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.showAlert(title: "파싱 오류", message: "서버 응답 데이터를 파싱하는 중 오류가 발생했습니다.")
+                }
+                print("❌ JSON 파싱 오류: \(error.localizedDescription)")
             }
         }
 
@@ -344,10 +494,30 @@ class SearchViewController: UIViewController {
         selectedFoodsStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
     }
 
-    func showAlert(title: String, message: String) {
+    /// showAlert 함수에 completion 핸들러 추가
+    func showAlert(title: String, message: String, completion: (() -> Void)? = nil) {
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alertController.addAction(UIAlertAction(title: "확인", style: .default))
+        alertController.addAction(UIAlertAction(title: "확인", style: .default, handler: { _ in
+            completion?()
+        }))
         present(alertController, animated: true)
+    }
+
+    /// 현재 시간에 따른 식사 시간 결정 함수
+    func getCurrentMealtime() -> String {
+        let now = Date()
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: now)
+        let minute = calendar.component(.minute, from: now)
+        let totalMinutes = hour * 60 + minute
+
+        if totalMinutes >= 1 && totalMinutes < 11 * 60 {
+            return "breakfast"
+        } else if totalMinutes >= 11 * 60 && totalMinutes < 17 * 60 {
+            return "lunch"
+        } else {
+            return "dinner"
+        }
     }
 }
 
@@ -373,7 +543,7 @@ extension SearchViewController: UITableViewDelegate, UITableViewDataSource {
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
-        // 커스텀 셀을 원한다면 별도로 구현할 수 있습니다.
+        // 기본 셀을 사용합니다. 커스텀 셀을 원하면 별도로 구현할 수 있습니다.
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         cell.textLabel?.text = filteredFoods[indexPath.row]
         return cell
@@ -386,3 +556,4 @@ extension SearchViewController: UITableViewDelegate, UITableViewDataSource {
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }
+

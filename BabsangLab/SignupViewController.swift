@@ -136,7 +136,7 @@ class SignupViewController: UIViewController {
             return
         }
         
-        let urlString = "http://34.47.127.47:8080/user/register?userId=\(enteredId)"
+        let urlString = "http://34.64.172.57:8080/user/register?userId=\(enteredId)"
         guard let url = URL(string: urlString) else {
             duplicateCheckLabel.text = "잘못된 URL입니다."
             duplicateCheckLabel.isHidden = false

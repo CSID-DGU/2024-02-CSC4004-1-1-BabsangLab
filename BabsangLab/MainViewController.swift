@@ -3,30 +3,29 @@ import Foundation
 
 // MARK: - Models
 
-// 공통 응답 모델을 제네릭으로 정의하여 재사용성을 높였습니다.
 struct ResponseDto<T: Codable>: Codable {
     let responseDto: T?
     let error: String?
     let success: Bool
 
     enum CodingKeys: String, CodingKey {
-        case responseDto = "ResponseDto"
+        case responseDto
         case error
         case success
     }
 }
 
-
-// 기존의 RecordResponse 모델
 struct RecordResponse: Codable {
-    let mealtime: String
+    let foodName: String
+    let mealtime: String?
     let calories: Double
     let fat: Double
     let protein: Double
     let carbs: Double
-    let intakeAmount: Int?
+    let intakeAmount: Double?
 
     enum CodingKeys: String, CodingKey {
+        case foodName
         case mealtime
         case calories
         case fat
@@ -36,47 +35,20 @@ struct RecordResponse: Codable {
     }
 }
 
-// 달성률 API 응답 모델
 struct RateResponseDto: Codable {
     let rateCalories: Double
     let rateProtein: Double
     let rateFat: Double
-    let rateCarb: Double
+    let rateCarbs: Double
 
     enum CodingKeys: String, CodingKey {
         case rateCalories
         case rateProtein
         case rateFat
-        case rateCarb
+        case rateCarbs
     }
 }
 
-struct RateResponseContainer: Codable {
-    let rateResponseDto: RateResponseDto?
-
-    enum CodingKeys: String, CodingKey {
-        case rateResponseDto = "RateResponseDto"
-    }
-}
-
-// 몸무게 정보가 없을 때의 알림 응답 모델
-struct NotifyResponseDto: Codable {
-    let message: String
-
-    enum CodingKeys: String, CodingKey {
-        case message
-    }
-}
-
-struct NotifyResponseContainer: Codable {
-    let notifyResponseDto: NotifyResponseDto?
-
-    enum CodingKeys: String, CodingKey {
-        case notifyResponseDto = "NotifyResponseDto"
-    }
-}
-
-// 음식 추천 API 응답 모델
 struct FoodRecommendation: Codable {
     let foodName: String
     let calories: Double
@@ -95,12 +67,114 @@ struct FoodRecommendation: Codable {
     }
 }
 
-struct RecommendResponseContainer: Codable {
-    let recommendDtoList: [FoodRecommendation]?
+// MARK: - CircularProgressView
 
-    enum CodingKeys: String, CodingKey {
-        case recommendDtoList = "RecommendDtoList"
+class CircularProgressView: UIView {
+    private let trackLayer = CAShapeLayer()
+    private let progressLayer = CAShapeLayer()
+    private let progressLabel = UILabel()
+
+    var progress: CGFloat = 0 {
+        didSet {
+            setProgress(to: progress, animated: false)
+        }
     }
+
+    var progressColor: UIColor = .systemBlue {
+        didSet {
+            progressLayer.strokeColor = progressColor.cgColor
+        }
+    }
+
+    var trackColor: UIColor = UIColor.lightGray.withAlphaComponent(0.3) {
+        didSet {
+            trackLayer.strokeColor = trackColor.cgColor
+        }
+    }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupLayers()
+        setupLabel()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupLayers()
+        setupLabel()
+    }
+
+    private func setupLayers() {
+        // Remove existing layers to prevent duplicates
+        trackLayer.removeFromSuperlayer()
+        progressLayer.removeFromSuperlayer()
+
+        let circularPath = UIBezierPath(arcCenter: CGPoint(x: bounds.width / 2, y: bounds.height / 2),
+                                        radius: (min(bounds.width, bounds.height) - 20) / 2,
+                                        startAngle: -.pi / 2,
+                                        endAngle: 1.5 * .pi,
+                                        clockwise: true)
+
+        trackLayer.path = circularPath.cgPath
+        trackLayer.strokeColor = trackColor.cgColor
+        trackLayer.fillColor = UIColor.clear.cgColor
+        trackLayer.lineWidth = 8
+        trackLayer.lineCap = .round
+        layer.addSublayer(trackLayer)
+
+        progressLayer.path = circularPath.cgPath
+        progressLayer.strokeColor = progressColor.cgColor
+        progressLayer.fillColor = UIColor.clear.cgColor
+        progressLayer.lineWidth = 8
+        progressLayer.lineCap = .round
+        progressLayer.strokeEnd = progress
+        layer.addSublayer(progressLayer)
+    }
+
+    private func setupLabel() {
+        progressLabel.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        progressLabel.textColor = .black
+        progressLabel.textAlignment = .center
+        progressLabel.numberOfLines = 0
+        progressLabel.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(progressLabel)
+
+        NSLayoutConstraint.activate([
+            progressLabel.centerXAnchor.constraint(equalTo: self.centerXAnchor),
+            progressLabel.centerYAnchor.constraint(equalTo: self.centerYAnchor),
+            progressLabel.widthAnchor.constraint(equalTo: self.widthAnchor, multiplier: 0.8)
+        ])
+    }
+
+    func setProgress(to newProgress: CGFloat, animated: Bool) {
+        DispatchQueue.main.async {
+            let clampedProgress = min(max(newProgress, 0), 1)
+            self.progressLayer.strokeEnd = clampedProgress
+            self.progressLabel.text = String(format: "%.0f%%", clampedProgress * 100)
+
+            if animated {
+                let animation = CABasicAnimation(keyPath: "strokeEnd")
+                animation.fromValue = self.progressLayer.strokeEnd
+                animation.toValue = clampedProgress
+                animation.duration = 0.5
+                animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                self.progressLayer.add(animation, forKey: "progressAnim")
+            }
+        }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        setupLayers()
+    }
+}
+
+// MARK: - FoodType Enum
+
+enum FoodType: String {
+    case singleFood = "단일 음식"
+    case multiFood = "다중 음식"
+    case unknown = "알 수 없음" // 추가된 케이스
 }
 
 // MARK: - MainViewController
@@ -110,14 +184,12 @@ class MainViewController: UIViewController {
     // MARK: - UI Elements
 
     let nutritionView = UIView()
-    let calorieLabel = UILabel()
     var recordCollectionView: UICollectionView!
     let analysisView = UIView()
     let analysisScrollView = UIScrollView()
     let analysisContentView = UIView()
     let floatingPlusButton = UIButton(type: .system)
-    let progressCircle = CAShapeLayer()
-    var totalCalories: CGFloat = 1800
+    var totalCalories: CGFloat = 2000 // 예시로 2000 kcal로 설정
     var consumedCalories: CGFloat = 0 // 초기값 0으로 설정
     var nutritionDetails: (carbs: Double, protein: Double, fat: Double) = (0, 0, 0)
     var recordList: [RecordResponse] = []
@@ -132,6 +204,8 @@ class MainViewController: UIViewController {
         return UserInfoManager.shared.name ?? "defaultUser"
     }
 
+    // MARK: - Lifecycle Methods
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .white
@@ -141,6 +215,11 @@ class MainViewController: UIViewController {
         setupRecordView()
         setupAnalysisView()
         setupFloatingButtons()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // 데이터 새로고침
         fetchTodayDiet()
         fetchAchievementRates()
         fetchFoodRecommendations()
@@ -166,22 +245,20 @@ class MainViewController: UIViewController {
 
         let titleLabel = UILabel()
         titleLabel.text = "오늘의 식단"
-        titleLabel.font = UIFont.boldSystemFont(ofSize: 18)
-        titleLabel.textColor = .black
-        titleLabel.textAlignment = .center
+        titleLabel.font = UIFont.boldSystemFont(ofSize: 16)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
 
         navigationBarView.addSubview(titleLabel)
         view.addSubview(navigationBarView)
 
         NSLayoutConstraint.activate([
-            navigationBarView.topAnchor.constraint(equalTo: view.topAnchor, constant: 30),
+            navigationBarView.topAnchor.constraint(equalTo: view.topAnchor, constant: 40),
             navigationBarView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             navigationBarView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             navigationBarView.heightAnchor.constraint(equalToConstant: 60),
 
             titleLabel.centerXAnchor.constraint(equalTo: navigationBarView.centerXAnchor),
-            titleLabel.bottomAnchor.constraint(equalTo: navigationBarView.bottomAnchor, constant: -10)
+            titleLabel.centerYAnchor.constraint(equalTo: navigationBarView.centerYAnchor)
         ])
     }
 
@@ -190,93 +267,99 @@ class MainViewController: UIViewController {
         nutritionView.backgroundColor = UIColor(white: 0.95, alpha: 1.0)
         nutritionView.layer.cornerRadius = 10
 
-        let progressView = UIView()
-        progressView.translatesAutoresizingMaskIntoConstraints = false
-
-        let circlePath = UIBezierPath(
-            arcCenter: CGPoint(x: 50, y: 50),
-            radius: 40,
-            startAngle: -.pi / 2,
-            endAngle: .pi / 2 * 3,
-            clockwise: true
-        )
-        progressCircle.path = circlePath.cgPath
-        progressCircle.strokeColor = UIColor.green.cgColor
-        progressCircle.fillColor = UIColor.clear.cgColor
-        progressCircle.lineWidth = 10
-        progressCircle.strokeEnd = 0 // 초기값 0
-        progressView.layer.addSublayer(progressCircle)
-
-        let centerLabel = UILabel()
-        centerLabel.text = "0\n/ \(Int(totalCalories)) kcal"
-        centerLabel.numberOfLines = 2
-        centerLabel.textAlignment = .center
-        centerLabel.font = UIFont.boldSystemFont(ofSize: 12)
-        centerLabel.translatesAutoresizingMaskIntoConstraints = false
-        centerLabel.tag = 100 // 나중에 접근하기 위해 태그 설정
-        progressView.addSubview(centerLabel)
-
-        NSLayoutConstraint.activate([
-            centerLabel.centerXAnchor.constraint(equalTo: progressView.centerXAnchor),
-            centerLabel.centerYAnchor.constraint(equalTo: progressView.centerYAnchor)
-        ])
-
-        let nutritionStack = UIStackView()
-        nutritionStack.axis = .horizontal
-        nutritionStack.distribution = .fillEqually
-        nutritionStack.spacing = 20
-        nutritionStack.translatesAutoresizingMaskIntoConstraints = false
-
-        let nutritionLabels = ["탄수화물", "단백질", "지방"]
-        let nutritionValues = ["0g", "0g", "0g"]
-
-        for (index, label) in nutritionLabels.enumerated() {
-            let stack = UIStackView()
-            stack.axis = .vertical
-            stack.alignment = .center
-
-            let titleLabel = UILabel()
-            titleLabel.text = label
-            titleLabel.font = UIFont.systemFont(ofSize: 14)
-            titleLabel.textAlignment = .center
-
-            let valueLabel = UILabel()
-            valueLabel.text = nutritionValues[index]
-            valueLabel.font = UIFont.boldSystemFont(ofSize: 12)
-            valueLabel.textAlignment = .center
-            valueLabel.tag = 200 + index // 나중에 접근하기 위해 태그 설정
-
-            stack.addArrangedSubview(titleLabel)
-            stack.addArrangedSubview(valueLabel)
-            nutritionStack.addArrangedSubview(stack)
-        }
-
         view.addSubview(nutritionView)
-        nutritionView.addSubview(progressView)
-        nutritionView.addSubview(nutritionStack)
 
         NSLayoutConstraint.activate([
-            nutritionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 56),
+            nutritionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 22),
             nutritionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             nutritionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            nutritionView.heightAnchor.constraint(equalToConstant: 140),
-
-            progressView.leadingAnchor.constraint(equalTo: nutritionView.leadingAnchor, constant: 16),
-            progressView.centerYAnchor.constraint(equalTo: nutritionView.centerYAnchor),
-            progressView.widthAnchor.constraint(equalToConstant: 100),
-            progressView.heightAnchor.constraint(equalToConstant: 100),
-
-            nutritionStack.topAnchor.constraint(equalTo: nutritionView.topAnchor, constant: 28),
-            nutritionStack.trailingAnchor.constraint(equalTo: nutritionView.trailingAnchor, constant: -16),
-            nutritionStack.leadingAnchor.constraint(equalTo: progressView.trailingAnchor, constant: 8),
-            nutritionStack.heightAnchor.constraint(equalToConstant: 60)
+            nutritionView.heightAnchor.constraint(equalToConstant: 170) // 높이를 늘려 레이블 공간 확보
         ])
+
+       
+        let caloriesProgressView = createCircularProgressView(title: "칼로리", icon: "flame.fill", progress: 0, color: .systemRed, consumedLabelTag: 100)
+        let carbsProgressView = createCircularProgressView(title: "탄수화물", icon: "leaf.fill", progress: 0, color: .systemGreen, consumedLabelTag: 101)
+        let proteinProgressView = createCircularProgressView(title: "단백질", icon: "bolt.fill", progress: 0, color: .systemOrange, consumedLabelTag: 102)
+        let fatProgressView = createCircularProgressView(title: "지방", icon: "drop.fill", progress: 0, color: .systemPurple, consumedLabelTag: 103)
+
+        let progressStackView = UIStackView(arrangedSubviews: [caloriesProgressView, carbsProgressView, proteinProgressView, fatProgressView])
+        progressStackView.axis = .horizontal
+        progressStackView.distribution = .fillEqually
+        progressStackView.spacing = 16
+        progressStackView.translatesAutoresizingMaskIntoConstraints = false
+
+        nutritionView.addSubview(progressStackView)
+
+        NSLayoutConstraint.activate([
+            progressStackView.topAnchor.constraint(equalTo: nutritionView.topAnchor, constant: 16),
+            progressStackView.leadingAnchor.constraint(equalTo: nutritionView.leadingAnchor, constant: 16),
+            progressStackView.trailingAnchor.constraint(equalTo: nutritionView.trailingAnchor, constant: -16),
+            progressStackView.bottomAnchor.constraint(equalTo: nutritionView.bottomAnchor, constant: -16)
+        ])
+    }
+
+    func createCircularProgressView(title: String, icon: String, progress: CGFloat, color: UIColor, consumedLabelTag: Int) -> UIView {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let imageView = UIImageView()
+        imageView.image = UIImage(systemName: icon)
+        imageView.tintColor = color
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentMode = .scaleAspectFit
+
+        let circularProgressView = CircularProgressView()
+        circularProgressView.progress = progress
+        circularProgressView.progressColor = color
+        circularProgressView.trackColor = UIColor.lightGray.withAlphaComponent(0.3)
+        circularProgressView.translatesAutoresizingMaskIntoConstraints = false
+
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        let consumedLabel = UILabel()
+        consumedLabel.font = UIFont.systemFont(ofSize: 8.5)
+        consumedLabel.textColor = .darkGray
+        consumedLabel.textAlignment = .center
+        consumedLabel.translatesAutoresizingMaskIntoConstraints = false
+        consumedLabel.tag = consumedLabelTag
+
+        container.addSubview(imageView)
+        container.addSubview(circularProgressView)
+        container.addSubview(titleLabel)
+        container.addSubview(consumedLabel)
+
+        NSLayoutConstraint.activate([
+            imageView.topAnchor.constraint(equalTo: container.topAnchor),
+            imageView.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            imageView.widthAnchor.constraint(equalToConstant: 24),
+            imageView.heightAnchor.constraint(equalToConstant: 24),
+
+            circularProgressView.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
+            circularProgressView.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+            circularProgressView.widthAnchor.constraint(equalToConstant: 60),
+            circularProgressView.heightAnchor.constraint(equalToConstant: 60),
+
+            titleLabel.topAnchor.constraint(equalTo: circularProgressView.bottomAnchor, constant: 8),
+            titleLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+
+            consumedLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
+            consumedLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            consumedLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            consumedLabel.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+        ])
+
+        return container
     }
 
     func setupRecordView() {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        layout.itemSize = CGSize(width: 140, height: 120)
+        layout.itemSize = CGSize(width: 120, height: 160)
         layout.minimumLineSpacing = 16
 
         recordCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -289,10 +372,10 @@ class MainViewController: UIViewController {
         view.addSubview(recordCollectionView)
 
         NSLayoutConstraint.activate([
-            recordCollectionView.topAnchor.constraint(equalTo: nutritionView.bottomAnchor, constant: 36),
+            recordCollectionView.topAnchor.constraint(equalTo: nutritionView.bottomAnchor, constant: 27),
             recordCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             recordCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            recordCollectionView.heightAnchor.constraint(equalToConstant: 220),
+            recordCollectionView.heightAnchor.constraint(equalToConstant: 190),
         ])
     }
 
@@ -311,7 +394,7 @@ class MainViewController: UIViewController {
         view.addSubview(analysisView)
 
         NSLayoutConstraint.activate([
-            analysisView.topAnchor.constraint(equalTo: recordCollectionView.bottomAnchor, constant: 16),
+            analysisView.topAnchor.constraint(equalTo: recordCollectionView.bottomAnchor, constant: 27),
             analysisView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             analysisView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             analysisView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -100), // 필요한 경우 조정
@@ -330,11 +413,15 @@ class MainViewController: UIViewController {
     }
 
     func setupFloatingButtons() {
-        floatingPlusButton.setTitle("+", for: .normal)
-        floatingPlusButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 34)
-        floatingPlusButton.backgroundColor = .systemGreen
+
+        floatingPlusButton.setImage(UIImage(systemName: "plus.circle.fill"), for: .normal)
         floatingPlusButton.tintColor = .white
+        floatingPlusButton.backgroundColor = .systemBlue
         floatingPlusButton.layer.cornerRadius = 30
+        floatingPlusButton.layer.shadowColor = UIColor.black.cgColor
+        floatingPlusButton.layer.shadowOpacity = 0.2
+        floatingPlusButton.layer.shadowOffset = CGSize(width: 0, height: 2)
+        floatingPlusButton.layer.shadowRadius = 4
         floatingPlusButton.translatesAutoresizingMaskIntoConstraints = false
 
         floatingPlusButton.addTarget(self, action: #selector(showAddOptions), for: .touchUpInside)
@@ -353,15 +440,21 @@ class MainViewController: UIViewController {
     @objc func showAddOptions() {
         let alertController = UIAlertController(title: "음식 추가하기", message: nil, preferredStyle: .actionSheet)
         alertController.addAction(UIAlertAction(title: "사진으로 추가하기", style: .default) { _ in
-            self.showFoodOptionSelector() // 기존의 카메라 호출 로직
+            self.showFoodOptionSelector()
         })
         alertController.addAction(UIAlertAction(title: "앨범으로 추가하기", style: .default) { _ in
-            self.openPhotoLibrary() // 새로 추가된 앨범 호출 로직
+            self.openPhotoLibrary()
         })
         alertController.addAction(UIAlertAction(title: "검색으로 추가하기", style: .default) { _ in
-            self.navigateToSearch() // 새로 추가된 검색 화면 이동
+            self.navigateToSearch()
         })
         alertController.addAction(UIAlertAction(title: "취소", style: .cancel))
+
+       
+        if let popoverController = alertController.popoverPresentationController {
+            popoverController.sourceView = self.floatingPlusButton
+            popoverController.sourceRect = self.floatingPlusButton.bounds
+        }
 
         present(alertController, animated: true)
     }
@@ -416,10 +509,14 @@ class MainViewController: UIViewController {
     }
 
     func navigateToResultViewController(image: UIImage, foodType: FoodType) {
+        guard let navigationController = self.navigationController else {
+            print("NavigationController가 nil입니다.")
+            return
+        }
         let resultVC = ResultViewController()
         resultVC.selectedImage = image
         resultVC.selectedFoodType = foodType
-        navigationController?.pushViewController(resultVC, animated: true)
+        navigationController.pushViewController(resultVC, animated: true)
     }
 
     func openCamera() {
@@ -511,6 +608,22 @@ class MainViewController: UIViewController {
                         }
                     }
                 }
+            } catch let decodingError as DecodingError {
+                switch decodingError {
+                case .dataCorrupted(let context):
+                    print("DecodingError.dataCorrupted: \(context.debugDescription)")
+                case .keyNotFound(let key, let context):
+                    print("DecodingError.keyNotFound: key '\(key)' not found, \(context.debugDescription)")
+                case .valueNotFound(let value, let context):
+                    print("DecodingError.valueNotFound: value '\(value)' not found, \(context.debugDescription)")
+                case .typeMismatch(let type, let context):
+                    print("DecodingError.typeMismatch: type '\(type)' mismatch, \(context.debugDescription)")
+                @unknown default:
+                    print("DecodingError: \(decodingError.localizedDescription)")
+                }
+                DispatchQueue.main.async {
+                    self.showUnknownErrorAlert(message: "데이터 파싱 오류: \(decodingError.localizedDescription)")
+                }
             } catch {
                 print("JSON 파싱 중 에러 발생: \(error.localizedDescription)")
                 DispatchQueue.main.async {
@@ -523,7 +636,7 @@ class MainViewController: UIViewController {
     }
 
     func constructURL() -> URL? {
-        let baseURL = "http://34.47.127.47:8080/record/date"
+        let baseURL = "http://34.64.172.57:8080/record/date"
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let todayDateString = dateFormatter.string(from: Date())
@@ -585,24 +698,42 @@ class MainViewController: UIViewController {
             // JSON 파싱
             do {
                 let decoder = JSONDecoder()
-                if let messageResponse = try? decoder.decode(ResponseDto<NotifyResponseContainer>.self, from: data),
-                   let message = messageResponse.responseDto?.notifyResponseDto?.message {
-                    // 몸무게 정보가 없을 때 처리
+                let responseDto = try decoder.decode(ResponseDto<RateResponseDto>.self, from: data)
+
+                if responseDto.success, let rates = responseDto.responseDto {
+                    self.achievementRates = rates
                     DispatchQueue.main.async {
-                        self.showUnknownErrorAlert(message: message)
+                        self.updateCalorieProgress()
+                        self.updateAnalysisView()
                     }
                 } else {
-                    let rateResponse = try decoder.decode(ResponseDto<RateResponseContainer>.self, from: data)
-                    if rateResponse.success, let rates = rateResponse.responseDto?.rateResponseDto {
-                        self.achievementRates = rates
+                    if let errorMessage = responseDto.error {
+                        print("API 오류: \(errorMessage)")
                         DispatchQueue.main.async {
-                            self.updateAnalysisView()
+                            self.showUnknownErrorAlert(message: "API 오류: \(errorMessage)")
                         }
                     } else {
+                        print("알 수 없는 오류가 발생했습니다.")
                         DispatchQueue.main.async {
                             self.showUnknownErrorAlert(message: "알 수 없는 오류가 발생했습니다.")
                         }
                     }
+                }
+            } catch let decodingError as DecodingError {
+                switch decodingError {
+                case .dataCorrupted(let context):
+                    print("DecodingError.dataCorrupted: \(context.debugDescription)")
+                case .keyNotFound(let key, let context):
+                    print("DecodingError.keyNotFound: key '\(key)' not found, \(context.debugDescription)")
+                case .valueNotFound(let value, let context):
+                    print("DecodingError.valueNotFound: value '\(value)' not found, \(context.debugDescription)")
+                case .typeMismatch(let type, let context):
+                    print("DecodingError.typeMismatch: type '\(type)' mismatch, \(context.debugDescription)")
+                @unknown default:
+                    print("DecodingError: \(decodingError.localizedDescription)")
+                }
+                DispatchQueue.main.async {
+                    self.showUnknownErrorAlert(message: "데이터 파싱 오류: \(decodingError.localizedDescription)")
                 }
             } catch {
                 print("Achievement Rate JSON 파싱 중 에러 발생: \(error.localizedDescription)")
@@ -616,7 +747,7 @@ class MainViewController: UIViewController {
     }
 
     func constructAchievementRateURL() -> URL? {
-        let baseURL = "http://34.47.127.47:8080/record/rate"
+        let baseURL = "http://34.64.172.57:8080/record/rate"
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let todayDateString = dateFormatter.string(from: Date())
@@ -678,8 +809,8 @@ class MainViewController: UIViewController {
             // JSON 파싱
             do {
                 let decoder = JSONDecoder()
-                let recommendResponse = try decoder.decode(ResponseDto<RecommendResponseContainer>.self, from: data)
-                if recommendResponse.success, let recommendations = recommendResponse.responseDto?.recommendDtoList {
+                let recommendResponse = try decoder.decode(ResponseDto<[FoodRecommendation]>.self, from: data)
+                if recommendResponse.success, let recommendations = recommendResponse.responseDto {
                     self.foodRecommendations = recommendations
                     // 랜덤으로 3개의 추천 음식 선택
                     self.displayedRecommendations = Array(recommendations.shuffled().prefix(3))
@@ -690,6 +821,22 @@ class MainViewController: UIViewController {
                     DispatchQueue.main.async {
                         self.showUnknownErrorAlert(message: "알 수 없는 오류가 발생했습니다.")
                     }
+                }
+            } catch let decodingError as DecodingError {
+                switch decodingError {
+                case .dataCorrupted(let context):
+                    print("DecodingError.dataCorrupted: \(context.debugDescription)")
+                case .keyNotFound(let key, let context):
+                    print("DecodingError.keyNotFound: key '\(key)' not found, \(context.debugDescription)")
+                case .valueNotFound(let value, let context):
+                    print("DecodingError.valueNotFound: value '\(value)' not found, \(context.debugDescription)")
+                case .typeMismatch(let type, let context):
+                    print("DecodingError.typeMismatch: type '\(type)' mismatch, \(context.debugDescription)")
+                @unknown default:
+                    print("DecodingError: \(decodingError.localizedDescription)")
+                }
+                DispatchQueue.main.async {
+                    self.showUnknownErrorAlert(message: "데이터 파싱 오류: \(decodingError.localizedDescription)")
                 }
             } catch {
                 print("Food Recommendation JSON 파싱 중 에러 발생: \(error.localizedDescription)")
@@ -703,7 +850,7 @@ class MainViewController: UIViewController {
     }
 
     func constructRecommendationURL() -> URL? {
-        let baseURL = "http://34.47.127.47:8080/record/recommend"
+        let baseURL = "http://34.64.172.57:8080/record/recommend"
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let todayDateString = dateFormatter.string(from: Date())
@@ -723,18 +870,18 @@ class MainViewController: UIViewController {
         self.recordList = records
         self.recordCollectionView.reloadData()
 
-        // 칼로리 및 영양소 합산
+        // 칼로리 및 영양소 합산 (intakeAmount 중복 계산 제거)
         var totalConsumedCalories: Double = 0
         var totalCarbs: Double = 0
         var totalProtein: Double = 0
         var totalFat: Double = 0
 
         for record in records {
-            let intake = record.intakeAmount ?? 1 // intakeAmount이 없으면 1로 간주
-            totalConsumedCalories += record.calories * Double(intake)
-            totalCarbs += record.carbs * Double(intake)
-            totalProtein += record.protein * Double(intake)
-            totalFat += record.fat * Double(intake)
+            // intakeAmount을 곱지 않음
+            totalConsumedCalories += record.calories
+            totalCarbs += record.carbs
+            totalProtein += record.protein
+            totalFat += record.fat
         }
 
         self.consumedCalories = CGFloat(totalConsumedCalories)
@@ -742,132 +889,222 @@ class MainViewController: UIViewController {
 
         // UI 업데이트
         updateCalorieProgress()
-        updateNutritionLabels()
         updateAnalysisView()
     }
 
     // MARK: - UI Updates
 
     func updateCalorieProgress() {
-        let progress = consumedCalories / totalCalories
-        progressCircle.strokeEnd = progress > 1 ? 1 : progress
+        // Update the progress for each circular progress view
+        if let progressStackView = nutritionView.subviews.compactMap({ $0 as? UIStackView }).first,
+           progressStackView.arrangedSubviews.count >= 4,
+           let rates = achievementRates {
 
-        if let centerLabel = nutritionView.viewWithTag(100) as? UILabel {
-            centerLabel.text = "\(Int(consumedCalories))/\(Int(totalCalories)) kcal"
-        }
-    }
+            let caloriesContainer = progressStackView.arrangedSubviews[0]
+            let carbsContainer = progressStackView.arrangedSubviews[1]
+            let proteinContainer = progressStackView.arrangedSubviews[2]
+            let fatContainer = progressStackView.arrangedSubviews[3]
 
-    func updateNutritionLabels() {
-        let nutritionValues = [
-            "탄수화물: \(Int(nutritionDetails.carbs))g",
-            "단백질: \(Int(nutritionDetails.protein))g",
-            "지방: \(Int(nutritionDetails.fat))g"
-        ]
+            if let caloriesProgressView = caloriesContainer.subviews.compactMap({ $0 as? CircularProgressView }).first,
+               let carbsProgressView = carbsContainer.subviews.compactMap({ $0 as? CircularProgressView }).first,
+               let proteinProgressView = proteinContainer.subviews.compactMap({ $0 as? CircularProgressView }).first,
+               let fatProgressView = fatContainer.subviews.compactMap({ $0 as? CircularProgressView }).first {
 
-        for (index, value) in nutritionValues.enumerated() {
-            if let valueLabel = nutritionView.viewWithTag(200 + index) as? UILabel {
-                valueLabel.text = value
+                // 달성률이 0보다 클 때만 계산
+                guard rates.rateCalories > 0, rates.rateCarbs > 0, rates.rateProtein > 0, rates.rateFat > 0 else {
+                    // 달성률이 0인 경우 처리 (예: 목표가 설정되지 않음)
+                    print("달성률이 0입니다.")
+                    return
+                }
+
+                // 목표값 계산
+                let targetCalories = consumedCalories / CGFloat(rates.rateCalories)
+                let targetCarbs = CGFloat(nutritionDetails.carbs) / CGFloat(rates.rateCarbs)
+                let targetProtein = CGFloat(nutritionDetails.protein) / CGFloat(rates.rateProtein)
+                let targetFat = CGFloat(nutritionDetails.fat) / CGFloat(rates.rateFat)
+
+                // 프로그레스 뷰에 달성률 설정
+                let caloriesProgress = CGFloat(rates.rateCalories) // 예: 0.6 -> 60%
+                caloriesProgressView.setProgress(to: caloriesProgress, animated: true)
+
+                let carbsProgress = CGFloat(rates.rateCarbs)
+                carbsProgressView.setProgress(to: carbsProgress, animated: true)
+
+                let proteinProgress = CGFloat(rates.rateProtein)
+                proteinProgressView.setProgress(to: proteinProgress, animated: true)
+
+                let fatProgress = CGFloat(rates.rateFat)
+                fatProgressView.setProgress(to: fatProgress, animated: true)
+
+                // "소비/목표" 레이블 업데이트
+                if let caloriesLabel = caloriesContainer.viewWithTag(100) as? UILabel {
+                    caloriesLabel.text = "\(Int(consumedCalories))/\(Int(targetCalories)) kcal"
+                }
+
+                if let carbsLabel = carbsContainer.viewWithTag(101) as? UILabel {
+                    carbsLabel.text = "\(Int(nutritionDetails.carbs))/\(Int(targetCarbs)) g"
+                }
+
+                if let proteinLabel = proteinContainer.viewWithTag(102) as? UILabel {
+                    proteinLabel.text = "\(Int(nutritionDetails.protein))/\(Int(targetProtein)) g"
+                }
+
+                if let fatLabel = fatContainer.viewWithTag(103) as? UILabel {
+                    fatLabel.text = "\(Int(nutritionDetails.fat))/\(Int(targetFat)) g"
+                }
             }
         }
     }
 
     func updateAnalysisView() {
-        // 기존의 서브뷰 제거
-        analysisScrollView.removeFromSuperview()
-        analysisView.subviews.forEach { $0.removeFromSuperview() }
-
-        analysisScrollView.translatesAutoresizingMaskIntoConstraints = false
-        analysisView.addSubview(analysisScrollView)
-
-        NSLayoutConstraint.activate([
-            analysisScrollView.topAnchor.constraint(equalTo: analysisView.topAnchor),
-            analysisScrollView.leadingAnchor.constraint(equalTo: analysisView.leadingAnchor),
-            analysisScrollView.trailingAnchor.constraint(equalTo: analysisView.trailingAnchor),
-            analysisScrollView.bottomAnchor.constraint(equalTo: analysisView.bottomAnchor)
-        ])
-
-        analysisContentView.translatesAutoresizingMaskIntoConstraints = false
-        analysisScrollView.addSubview(analysisContentView)
-
-        NSLayoutConstraint.activate([
-            analysisContentView.topAnchor.constraint(equalTo: analysisScrollView.topAnchor),
-            analysisContentView.leadingAnchor.constraint(equalTo: analysisScrollView.leadingAnchor),
-            analysisContentView.trailingAnchor.constraint(equalTo: analysisScrollView.trailingAnchor),
-            analysisContentView.bottomAnchor.constraint(equalTo: analysisScrollView.bottomAnchor),
-            analysisContentView.widthAnchor.constraint(equalTo: analysisScrollView.widthAnchor)
-        ])
+        // Remove all subviews from analysisContentView
+        analysisContentView.subviews.forEach { $0.removeFromSuperview() }
 
         var previousView: UIView?
 
-        // 달성률 표시
+        // 식단 분석 섹션 추가
         if let rates = achievementRates {
-            let rateText = """
-            탄수화물 달성률: \(String(format: "%.1f", rates.rateCarb))%
-            단백질 달성률: \(String(format: "%.1f", rates.rateProtein))%
-            지방 달성률: \(String(format: "%.1f", rates.rateFat))%
-            """
-            let rateLabel = UILabel()
-            rateLabel.numberOfLines = 0
-            rateLabel.font = UIFont.systemFont(ofSize: 14)
-            rateLabel.text = rateText
-            rateLabel.translatesAutoresizingMaskIntoConstraints = false
-            analysisContentView.addSubview(rateLabel)
+            // "식단 분석" 제목과 이미지 추가
+            let dietAnalysisTitleStack = UIStackView()
+            dietAnalysisTitleStack.axis = .horizontal
+            dietAnalysisTitleStack.spacing = 8
+            dietAnalysisTitleStack.alignment = .center
+            dietAnalysisTitleStack.translatesAutoresizingMaskIntoConstraints = false
+
+            let dietAnalysisEmojiLabel = UILabel()
+            dietAnalysisEmojiLabel.text = "📊"
+            dietAnalysisEmojiLabel.font = UIFont.systemFont(ofSize: 24)
+
+            let dietAnalysisTitleLabel = UILabel()
+            dietAnalysisTitleLabel.text = "식단 분석"
+            dietAnalysisTitleLabel.font = UIFont.boldSystemFont(ofSize: 18)
+            dietAnalysisTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+
+            dietAnalysisTitleStack.addArrangedSubview(dietAnalysisEmojiLabel)
+            dietAnalysisTitleStack.addArrangedSubview(dietAnalysisTitleLabel)
+
+            analysisContentView.addSubview(dietAnalysisTitleStack)
 
             NSLayoutConstraint.activate([
-                rateLabel.topAnchor.constraint(equalTo: analysisContentView.topAnchor, constant: 16),
-                rateLabel.leadingAnchor.constraint(equalTo: analysisContentView.leadingAnchor, constant: 16),
-                rateLabel.trailingAnchor.constraint(equalTo: analysisContentView.trailingAnchor, constant: -16)
+                dietAnalysisTitleStack.topAnchor.constraint(equalTo: analysisContentView.topAnchor, constant: 16),
+                dietAnalysisTitleStack.leadingAnchor.constraint(equalTo: analysisContentView.leadingAnchor, constant: 16)
             ])
 
-            previousView = rateLabel
+            previousView = dietAnalysisTitleStack
+
+            // 영양소 상태 메시지 추가
+            let messages = generateNutrientMessages()
+
+            let messagesStackView = UIStackView()
+            messagesStackView.axis = .vertical
+            messagesStackView.spacing = 8
+            messagesStackView.translatesAutoresizingMaskIntoConstraints = false
+
+            for message in messages {
+                let messageLabel = UILabel()
+                messageLabel.text = message
+                messageLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+                messageLabel.textColor = .black
+                messageLabel.numberOfLines = 0
+                messageLabel.textAlignment = .left
+                messagesStackView.addArrangedSubview(messageLabel)
+            }
+
+            analysisContentView.addSubview(messagesStackView)
+
+            NSLayoutConstraint.activate([
+                messagesStackView.topAnchor.constraint(equalTo: previousView!.bottomAnchor, constant: 8),
+                messagesStackView.leadingAnchor.constraint(equalTo: analysisContentView.leadingAnchor, constant: 16),
+                messagesStackView.trailingAnchor.constraint(equalTo: analysisContentView.trailingAnchor, constant: -16)
+            ])
+
+            previousView = messagesStackView
         }
 
         // 음식 추천 표시
         if !displayedRecommendations.isEmpty {
+            // 추천 제목에 이모티콘 추가
+            let recommendationTitleStack = UIStackView()
+            recommendationTitleStack.axis = .horizontal
+            recommendationTitleStack.spacing = 8
+            recommendationTitleStack.alignment = .center
+            recommendationTitleStack.translatesAutoresizingMaskIntoConstraints = false
+
+            let recommendationEmojiLabel = UILabel()
+            recommendationEmojiLabel.text = "🍽️"
+            recommendationEmojiLabel.font = UIFont.systemFont(ofSize: 24)
+
             let recommendationTitleLabel = UILabel()
             recommendationTitleLabel.text = "음식 추천"
-            recommendationTitleLabel.font = UIFont.boldSystemFont(ofSize: 16)
+            recommendationTitleLabel.font = UIFont.boldSystemFont(ofSize: 18)
             recommendationTitleLabel.translatesAutoresizingMaskIntoConstraints = false
-            analysisContentView.addSubview(recommendationTitleLabel)
+
+            recommendationTitleStack.addArrangedSubview(recommendationEmojiLabel)
+            recommendationTitleStack.addArrangedSubview(recommendationTitleLabel)
+
+            analysisContentView.addSubview(recommendationTitleStack)
 
             NSLayoutConstraint.activate([
-                recommendationTitleLabel.topAnchor.constraint(equalTo: previousView?.bottomAnchor ?? analysisContentView.topAnchor, constant: 16),
-                recommendationTitleLabel.leadingAnchor.constraint(equalTo: analysisContentView.leadingAnchor, constant: 16)
+                recommendationTitleStack.topAnchor.constraint(equalTo: previousView?.bottomAnchor ?? analysisContentView.topAnchor, constant: 24),
+                recommendationTitleStack.leadingAnchor.constraint(equalTo: analysisContentView.leadingAnchor, constant: 16)
             ])
 
             // 새로고침 버튼
             let refreshButton = UIButton(type: .system)
             refreshButton.setTitle("새로고침", for: .normal)
+            refreshButton.setTitleColor(.systemBlue, for: .normal)
+            refreshButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
             refreshButton.addTarget(self, action: #selector(refreshRecommendations), for: .touchUpInside)
             refreshButton.translatesAutoresizingMaskIntoConstraints = false
             analysisContentView.addSubview(refreshButton)
 
             NSLayoutConstraint.activate([
-                refreshButton.centerYAnchor.constraint(equalTo: recommendationTitleLabel.centerYAnchor),
+                refreshButton.centerYAnchor.constraint(equalTo: recommendationTitleStack.centerYAnchor),
                 refreshButton.trailingAnchor.constraint(equalTo: analysisContentView.trailingAnchor, constant: -16)
             ])
 
-            previousView = recommendationTitleLabel
+            previousView = recommendationTitleStack
 
             for recommendation in displayedRecommendations {
-                let foodLabel = UILabel()
-                foodLabel.numberOfLines = 0
-                foodLabel.font = UIFont.systemFont(ofSize: 14)
-                foodLabel.text = """
+                let recommendationRow = UIStackView()
+                recommendationRow.axis = .horizontal
+                recommendationRow.spacing = 16
+                recommendationRow.alignment = .center
+                recommendationRow.translatesAutoresizingMaskIntoConstraints = false
+
+                let foodImageView = UIImageView()
+                foodImageView.contentMode = .scaleAspectFit
+                foodImageView.clipsToBounds = true
+                foodImageView.layer.cornerRadius = 8
+                foodImageView.backgroundColor = .lightGray // Placeholder color
+                foodImageView.image = UIImage(systemName: "fork.knife") // 시스템 이미지 사용
+
+                foodImageView.translatesAutoresizingMaskIntoConstraints = false
+                foodImageView.widthAnchor.constraint(equalToConstant: 60).isActive = true
+                foodImageView.heightAnchor.constraint(equalToConstant: 60).isActive = true
+
+                let foodDetailsLabel = UILabel()
+                foodDetailsLabel.numberOfLines = 0
+                foodDetailsLabel.font = UIFont.systemFont(ofSize: 14)
+                foodDetailsLabel.text = """
                 음식명: \(recommendation.foodName)
                 칼로리: \(Int(recommendation.calories)) kcal
                 탄수화물: \(Int(recommendation.carbs))g, 단백질: \(Int(recommendation.protein))g, 지방: \(Int(recommendation.fat))g
                 """
-                foodLabel.translatesAutoresizingMaskIntoConstraints = false
-                analysisContentView.addSubview(foodLabel)
+                foodDetailsLabel.translatesAutoresizingMaskIntoConstraints = false
+
+                recommendationRow.addArrangedSubview(foodImageView)
+                recommendationRow.addArrangedSubview(foodDetailsLabel)
+
+                analysisContentView.addSubview(recommendationRow)
 
                 NSLayoutConstraint.activate([
-                    foodLabel.topAnchor.constraint(equalTo: previousView!.bottomAnchor, constant: 16),
-                    foodLabel.leadingAnchor.constraint(equalTo: analysisContentView.leadingAnchor, constant: 16),
-                    foodLabel.trailingAnchor.constraint(equalTo: analysisContentView.trailingAnchor, constant: -16)
+                    recommendationRow.topAnchor.constraint(equalTo: previousView!.bottomAnchor, constant: 16),
+                    recommendationRow.leadingAnchor.constraint(equalTo: analysisContentView.leadingAnchor, constant: 16),
+                    recommendationRow.trailingAnchor.constraint(equalTo: analysisContentView.trailingAnchor, constant: -16)
                 ])
 
-                previousView = foodLabel
+                previousView = recommendationRow
             }
         }
 
@@ -893,11 +1130,51 @@ class MainViewController: UIViewController {
         alert.addAction(UIAlertAction(title: "확인", style: .default))
         present(alert, animated: true)
     }
+
+    // MARK: - Generate Nutrient Messages
+
+    func generateNutrientMessages() -> [String] {
+        var messages = [String]()
+        if let rates = achievementRates {
+            if rates.rateCalories < 1 {
+                messages.append("칼로리가 부족해요 🔥")
+            } else if rates.rateCalories < 1.2 {
+                messages.append("칼로리가 적당히 섭취되었어요 🍎")
+            } else {
+                messages.append("칼로리가 초과되었어요 😓")
+            }
+
+            if rates.rateCarbs < 1 {
+                messages.append("탄수화물이 부족해요 🍞")
+            } else if rates.rateCarbs < 1.2 {
+                messages.append("탄수화물이 적당히 섭취되었어요 🌾")
+            } else {
+                messages.append("탄수화물이 초과되었어요 🥖")
+            }
+
+            if rates.rateProtein < 1 {
+                messages.append("단백질이 부족해요 🍗")
+            } else if rates.rateProtein < 1.2 {
+                messages.append("단백질이 적당히 섭취되었어요 💪")
+            } else {
+                messages.append("단백질이 초과되었어요 🥩")
+            }
+
+            if rates.rateFat < 1 {
+                messages.append("지방이 부족해요 🥑")
+            } else if rates.rateFat < 1.2 {
+                messages.append("지방이 적당히 섭취되었어요 🥥")
+            } else {
+                messages.append("지방이 초과되었어요 🍔")
+            }
+        }
+        return messages
+    }
 }
 
 // MARK: - UICollectionView DataSource & Delegate
 
-extension MainViewController: UICollectionViewDataSource, UICollectionViewDelegate {
+extension MainViewController: UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return recordList.count
     }
@@ -907,10 +1184,24 @@ extension MainViewController: UICollectionViewDataSource, UICollectionViewDelega
             return UICollectionViewCell()
         }
         let record = recordList[indexPath.item]
-        let intake = record.intakeAmount ?? 1 // intakeAmount이 없으면 1로 간주
-        let calories = Int(record.calories * Double(intake))
-        cell.configure(name: record.mealtime, mealTime: record.mealtime, calories: "\(calories) kcal")
+        // intakeAmount을 더 이상 곱하지 않음
+        let calories = Int(record.calories)
+        cell.configure(name: record.foodName, mealTime: mealTimeKorean(from: record.mealtime), calories: "\(calories) kcal")
         return cell
+    }
+
+    func mealTimeKorean(from mealTime: String?) -> String {
+        guard let mealTime = mealTime else { return "알 수 없음" }
+        switch mealTime.lowercased() {
+        case "breakfast":
+            return "아침"
+        case "lunch":
+            return "점심"
+        case "dinner":
+            return "저녁"
+        default:
+            return "알 수 없음"
+        }
     }
 }
 
@@ -936,31 +1227,65 @@ extension MainViewController: UIImagePickerControllerDelegate, UINavigationContr
 // MARK: - RecordCell
 
 class RecordCell: UICollectionViewCell {
+    private let foodImageView = UIImageView()
     private let nameLabel = UILabel()
     private let mealTimeLabel = UILabel()
     private let calorieLabel = UILabel()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        layer.cornerRadius = 8
+        setupUI()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupUI()
+    }
+
+    private func setupUI() {
+        layer.cornerRadius = 12
         backgroundColor = .white
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOpacity = 0.1
         layer.shadowRadius = 4
         layer.shadowOffset = CGSize(width: 0, height: 2)
+        clipsToBounds = false
+
+        foodImageView.contentMode = .scaleAspectFill
+        foodImageView.clipsToBounds = true
+        foodImageView.layer.cornerRadius = 8
+        foodImageView.translatesAutoresizingMaskIntoConstraints = false
+        foodImageView.backgroundColor = .lightGray // Placeholder color
 
         nameLabel.font = UIFont.boldSystemFont(ofSize: 16)
-        mealTimeLabel.font = UIFont.systemFont(ofSize: 14)
-        calorieLabel.font = UIFont.systemFont(ofSize: 14)
+        nameLabel.textColor = .black
+        nameLabel.textAlignment = .center
+        nameLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        let stackView = UIStackView(arrangedSubviews: [nameLabel, mealTimeLabel, calorieLabel])
+        mealTimeLabel.font = UIFont.systemFont(ofSize: 14)
+        mealTimeLabel.textColor = .darkGray
+        mealTimeLabel.textAlignment = .center
+        mealTimeLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        calorieLabel.font = UIFont.systemFont(ofSize: 14)
+        calorieLabel.textColor = .darkGray
+        calorieLabel.textAlignment = .center
+        calorieLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        let stackView = UIStackView(arrangedSubviews: [foodImageView, nameLabel, mealTimeLabel, calorieLabel])
         stackView.axis = .vertical
-        stackView.spacing = 4
+        stackView.spacing = 8
+        stackView.alignment = .center
         stackView.translatesAutoresizingMaskIntoConstraints = false
 
         contentView.addSubview(stackView)
 
         NSLayoutConstraint.activate([
+            foodImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
+            foodImageView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            foodImageView.widthAnchor.constraint(equalToConstant: 60),
+            foodImageView.heightAnchor.constraint(equalToConstant: 60),
+
             stackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
             stackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 8),
             stackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
@@ -968,26 +1293,31 @@ class RecordCell: UICollectionViewCell {
         ])
     }
 
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
     func configure(name: String, mealTime: String, calories: String) {
         nameLabel.text = name
         mealTimeLabel.text = mealTime
         calorieLabel.text = calories
+
+
+        switch mealTime {
+        case "아침":
+            foodImageView.image = UIImage(systemName: "sunrise.fill")
+            foodImageView.tintColor = .systemYellow
+        case "점심":
+            foodImageView.image = UIImage(systemName: "fork.knife.circle.fill")
+            foodImageView.tintColor = .systemGreen
+        case "저녁":
+            foodImageView.image = UIImage(systemName: "moon.stars.fill")
+            foodImageView.tintColor = .systemPurple
+        default:
+            foodImageView.image = UIImage(systemName: "questionmark.circle.fill")
+            foodImageView.tintColor = .gray
+        }
     }
 }
 
-// MARK: - FoodType Enum
-
-enum FoodType: String {
-    case singleFood = "단일 음식"
-    case multiFood = "다중 음식"
-}
-
-// MARK: - Preview
 
 #Preview {
     MainViewController()
 }
+
