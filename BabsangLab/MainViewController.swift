@@ -174,6 +174,7 @@ class CircularProgressView: UIView {
 enum FoodType: String {
     case singleFood = "단일 음식"
     case multiFood = "다중 음식"
+    case unknown = "알 수 없음" // 추가된 케이스
 }
 
 // MARK: - MainViewController

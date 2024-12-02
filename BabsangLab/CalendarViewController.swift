@@ -23,7 +23,7 @@ class CalendarViewController: UIViewController, FSCalendarDelegate, FSCalendarDa
 
         // 한국어 설정
         calendar.locale = Locale(identifier: "ko_KR") // 한국어 지역화 설정
-        calendar.appearance.headerDateFormat = "YYYY년 MM월" // 헤더 형식 변경
+        calendar.appearance.headerDateFormat = "yyyy년 MM월" // 헤더 형식 변경
 
         view.addSubview(calendar)
 
@@ -60,9 +60,9 @@ class CalendarViewController: UIViewController, FSCalendarDelegate, FSCalendarDa
     // MARK: - FSCalendar Delegate Methods
 
     func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
-        let detailVC = DetailDietViewController()
-        detailVC.selectedDate = date // 선택된 날짜 전달
-        navigationController?.pushViewController(detailVC, animated: true)
+        let dailyRecordVC = DailyRecordViewController()
+        dailyRecordVC.selectedDate = date // 선택된 날짜 전달
+        navigationController?.pushViewController(dailyRecordVC, animated: true)
     }
 
     func calendar(_ calendar: FSCalendar, numberOfEventsFor date: Date) -> Int {

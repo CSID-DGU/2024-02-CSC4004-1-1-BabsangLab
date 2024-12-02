@@ -20,6 +20,39 @@ struct AnalysisDto: Codable {
     let medical_issue: String?
 }
 
+// MARK: - UIButton Extension for Gradient
+
+extension UIButton {
+    func applyGradient(colors: [UIColor], cornerRadius: CGFloat = 10) {
+        // 기존의 그라데이션 레이어 제거
+        self.layer.sublayers?.filter { $0.name == "gradientLayer" }.forEach { $0.removeFromSuperlayer() }
+        
+        // 그라데이션 레이어 생성
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.name = "gradientLayer"
+        gradientLayer.colors = colors.map { $0.cgColor }
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0.5) // 좌측 중앙
+        gradientLayer.endPoint = CGPoint(x: 1, y: 0.5)   // 우측 중앙
+        gradientLayer.frame = self.bounds
+        gradientLayer.cornerRadius = cornerRadius
+        
+        // 레이어에 그림자 추가
+        self.layer.shadowColor = UIColor.black.cgColor
+        self.layer.shadowOpacity = 0.25
+        self.layer.shadowOffset = CGSize(width: 0, height: 4)
+        self.layer.shadowRadius = 4
+        self.layer.masksToBounds = false
+        
+        // 버튼의 레이어에 그라데이션 추가
+        self.layer.insertSublayer(gradientLayer, at: 0)
+    }
+    
+    func updateGradientFrame() {
+            if let gradientLayer = self.layer.sublayers?.first(where: { $0.name == "gradientLayer" }) as? CAGradientLayer {
+                gradientLayer.frame = self.bounds
+            }
+        }
+}
 
 // MARK: - SearchViewController
 
@@ -49,6 +82,17 @@ class SearchViewController: UIViewController {
         setupGestureToDismissKeyboard()
 
         filteredFoods = foodDatabase
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        // 그라데이션 레이어의 프레임을 버튼의 현재 프레임에 맞게 조정
+        saveButton.layer.sublayers?.forEach { layer in
+            if layer.name == "gradientLayer" {
+                layer.frame = saveButton.bounds
+            }
+        }
     }
 
     // MARK: - UI 설정
@@ -113,18 +157,25 @@ class SearchViewController: UIViewController {
 
     func setupSaveButton() {
         saveButton.setTitle("식단 기록하기", for: .normal)
-        saveButton.backgroundColor = .systemGreen
         saveButton.setTitleColor(.white, for: .normal)
+        saveButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18) // 글꼴을 굵게 하고 크기 조정
         saveButton.layer.cornerRadius = 10
         saveButton.translatesAutoresizingMaskIntoConstraints = false
+        saveButton.clipsToBounds = true
         view.addSubview(saveButton)
 
         NSLayoutConstraint.activate([
-            saveButton.topAnchor.constraint(equalTo: selectedFoodsScrollView.bottomAnchor, constant: 16),
+            saveButton.topAnchor.constraint(equalTo: selectedFoodsScrollView.bottomAnchor, constant: 5),
             saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            saveButton.widthAnchor.constraint(equalToConstant: 200),
-            saveButton.heightAnchor.constraint(equalToConstant: 50)
+            saveButton.widthAnchor.constraint(equalToConstant: 220), // 버튼 너비 약간 확대
+            saveButton.heightAnchor.constraint(equalToConstant: 40)  // 버튼 높이 약간 확대
         ])
+
+        // 그라데이션 적용 (버튼의 프레임이 설정된 후에 적용해야 정확한 크기로 그라데이션을 그릴 수 있습니다.)
+        saveButton.applyGradient(colors: [UIColor.systemGreen, UIColor.systemBlue], cornerRadius: 10)
+
+        // 그림자 추가는 UIButton Extension에서 이미 처리
+        // 필요한 경우 추가 설정 가능
 
         saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
     }
