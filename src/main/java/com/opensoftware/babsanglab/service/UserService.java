@@ -20,16 +20,7 @@ import org.springframework.stereotype.Service;
 @Getter
 public class UserService {
     private final UserRepository userRepository;
-//    public void updateUserAllergies(Long userId, Set<String> allergies) {
-//        User user = userRepository.findById(userId)
-//                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
-//        user.setAllergy(allergies);
-//        userRepository.save(user);
-//    }
     public NotifyResponseDto register(RegisterRequestDto registerRequestDto){
-//        User user = userRepository.findById(10l)
-//                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
-
         if (userRepository.findByUserId(registerRequestDto.getUserId()).isPresent())
             throw new ApiException(ErrorDefine.USER_EXIST);
         User user = User.builder()
@@ -42,15 +33,9 @@ public class UserService {
                 .weight(registerRequestDto.getWeight())
                 .med_history(registerRequestDto.getMed_history())
                 .allergy(registerRequestDto.getAllergy())
-                //.allergy(new HashSet<>(registerRequestDto.getAllergy())) // 다중 값 전달
                 .weight_goal(registerRequestDto.getWeight_goal())
                 .build();
             userRepository.save(user);
-
-//             RegisterResponseDto registerResponseDto = RegisterResponseDto.builder()
-//                    .message("회원가입이 잘 되었습니다")
-//                    .build();
-
         return NotifyResponseDto.builder()
                     .message("회원가입이 잘 되었습니다")
                     .build();
@@ -76,6 +61,17 @@ public class UserService {
                 .message(user.getPassword())
                 .build();
     }
+
+    public NotifyResponseDto login(String userId, String password){
+        User user = userRepository.findByUserIdAndPassword(userId,password)
+                .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));
+
+        return NotifyResponseDto.builder()
+                .message(user.getName()+"님 로그인에 성공하였습니다")
+                .build();
+    }
+
+
     public Boolean updateUser(UpdateRequestDto updateRequestDto) {
         User user = userRepository.findByUserId(updateRequestDto.getUserId())
                 .orElseThrow(() -> new ApiException(ErrorDefine.USER_NOT_FOUND));

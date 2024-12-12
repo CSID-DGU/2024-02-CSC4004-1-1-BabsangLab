@@ -32,10 +32,6 @@ public class Food {
     @Column
     @Enumerated(EnumType.STRING)
     private Allergy allergy;
-//    @ElementCollection
-//    @CollectionTable(name = "user_allergies", joinColumns = @JoinColumn(name = "user_id"))
-//    @Column(name = "allergy")
-//    private Set<String> allergy = new HashSet<>();
     @Column
     private String medical_issue;
 

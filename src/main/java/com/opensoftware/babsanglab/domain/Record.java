@@ -1,14 +1,9 @@
 package com.opensoftware.babsanglab.domain;
-
-
-import com.opensoftware.babsanglab.domain.enums.Allergy;
 import com.opensoftware.babsanglab.domain.enums.Mealtime;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Getter

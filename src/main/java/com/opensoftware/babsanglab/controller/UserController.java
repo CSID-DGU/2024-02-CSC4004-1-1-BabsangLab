@@ -20,6 +20,14 @@ public class UserController {
         return new ResponseDto<>(userService.register(registerRequestDto));
     }
 
+    @GetMapping("/login")
+    public ResponseDto<NotifyResponseDto> login(
+            @RequestParam(name="userId") String userId,
+            @RequestParam(name="password") String password
+    ) {
+        return new ResponseDto<>(userService.login(userId,password));
+    }
+
     @GetMapping("/register")
     public ResponseDto<NotifyResponseDto> checkId(
             @RequestParam(name="userId") String userId
@@ -40,15 +48,6 @@ public class UserController {
     ) {
         return new ResponseDto<>(userService.updateUser(updateRequestDto));
     }
-
-//    @PutMapping("/{userId}/allergies")
-//    public ResponseDto<Boolean> updateAllergies(
-//            @PathVariable Long userId,
-//            @RequestBody List<String> allergies) {
-//        userService.updateUserAllergies(userId, new HashSet<>(allergies));
-//        return new ResponseDto<>(true);
-//    }
-
 
     @GetMapping("")
     public ResponseDto<Boolean> test() {
