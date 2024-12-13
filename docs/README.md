@@ -78,8 +78,8 @@
 ---
 ## 🌍 **프로젝트 배포**
  
-- Flask 서버를 통해 AI 모델을 배포하여 실시간 요청을 처리합니다.  
-- Spring Boot 기반 백엔드를 Google Cloud에 배포하여 안정적으로 데이터 처리를 지원합니다.  
+- Flask 서버를 통해 Google Cloud Platform(GCP)에 AI 모델을 배포하여 실시간 요청을 처리합니다.  
+- Spring Boot 기반 백엔드를 Google Cloud Platform(GCP)에 배포하여 안정적으로 데이터 처리를 지원합니다.  
 - iOS 앱은 AltStore를 통해 배포되었습니다. 
 
 1. **Mac에 AltServer 설치:** AltServer를 설치하고 필요한 설정을 완료합니다.  
