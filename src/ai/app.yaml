@@ -1,0 +1,19 @@
+runtime: python310
+entrypoint: gunicorn -b :$PORT app:app
+
+instance_class: F4
+
+handlers:
+- url: /.*
+  script: auto
+
+resources:
+  cpu: 4               # CPU를 4개로 증가
+  memory_gb: 4         # 메모리를 4GB로 증가
+  disk_size_gb: 20     # 디스크 크기를 20GB로 증가
+automatic_scaling:
+  min_instances: 1     # 최소 1개의 인스턴스 유지
+  max_instances: 2     # 최대 2개의 인스턴스로 제한
+  target_cpu_utilization: 0.65
+  target_throughput_utilization: 0.75
+

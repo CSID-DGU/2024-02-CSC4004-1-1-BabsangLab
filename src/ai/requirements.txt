@@ -1,0 +1,12 @@
+Flask
+tensorflow-cpu
+opencv-python-headless
+numpy<2.0
+gitpython>=3.1.30
+gunicorn
+torch==1.13.0
+torchvision
+ultralytics
+Pillow
+Werkzeug>=2.0.0
+requests
